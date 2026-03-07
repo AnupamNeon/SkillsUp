@@ -1,0 +1,230 @@
+@import "tailwindcss";
+
+/* ───────────────── Theme Tokens ───────────────── */
+
+@theme {
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
+  --animate-fade-in: fade-in 0.4s ease-out;
+  --animate-slide-up: slide-up 0.5s ease-out;
+  --animate-scale-in: scale-in 0.25s ease-out;
+  --animate-shimmer: shimmer 2s linear infinite;
+}
+
+/* ───────────────── Animations ───────────────── */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+/* ───────────────── Base Styles ───────────────── */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-gray-900);
+    background: var(--color-white);
+    overflow-x: hidden;
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  ::selection {
+    background: var(--color-blue-100);
+    color: var(--color-blue-900);
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--color-blue-500);
+    outline-offset: 2px;
+  }
+}
+
+/* ───────────────── Utilities ───────────────── */
+
+@utility glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+@utility glass-dark {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@utility text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@utility shimmer-bg {
+  background: linear-gradient(
+    90deg,
+    var(--color-gray-200) 25%,
+    var(--color-gray-100) 50%,
+    var(--color-gray-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ───────────────── Components ───────────────── */
+
+@layer components {
+  /* Buttons */
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+    rounded-xl px-5 py-2.5 text-sm font-semibold
+    transition-all text-white
+    bg-gradient-to-r from-blue-600 to-indigo-600
+    shadow-lg shadow-blue-500/25
+    hover:-translate-y-0.5 hover:shadow-xl;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2
+    rounded-xl px-5 py-2.5 text-sm font-semibold
+    transition-all
+    border border-gray-200 bg-white text-gray-700
+    hover:bg-gray-50 hover:border-gray-300;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2
+    rounded-xl px-5 py-2.5 text-sm font-semibold
+    transition-all text-white
+    bg-gradient-to-r from-red-500 to-rose-600
+    shadow-lg shadow-red-500/25;
+  }
+
+  /* Inputs */
+
+  .input {
+    @apply w-full rounded-lg border border-gray-200
+    px-4 py-2.5 text-sm bg-white
+    placeholder:text-gray-400
+    focus:border-blue-400 focus:ring-4
+    focus:ring-blue-500/10 outline-none;
+  }
+
+  /* Cards */
+
+  .card {
+    @apply rounded-xl border border-gray-200/70
+    bg-white shadow-sm
+    hover:shadow-lg transition-all;
+  }
+
+  /* Badge */
+
+  .badge {
+    @apply inline-flex items-center gap-1
+    px-2.5 py-1 text-xs font-semibold
+    rounded-full;
+  }
+
+  .badge-success {
+    @apply inline-flex items-center gap-1
+    px-2.5 py-1 text-xs font-semibold
+    rounded-full bg-emerald-50 text-emerald-700;
+  }
+
+  .badge-warning {
+    @apply inline-flex items-center gap-1
+    px-2.5 py-1 text-xs font-semibold
+    rounded-full bg-amber-50 text-amber-700;
+  }
+
+  .badge-danger {
+    @apply inline-flex items-center gap-1
+    px-2.5 py-1 text-xs font-semibold
+    rounded-full bg-red-50 text-red-700;
+  }
+
+  /* Layout */
+
+  .section {
+    @apply mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8;
+  }
+}
+
+/* ───────────────── Third-party Overrides ───────────────── */
+
+.cl-userButtonAvatarBox {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+[data-sonner-toaster] {
+  border-radius: 16px !important;
+}
+
+/* ───────────────── Reduced Motion ───────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
