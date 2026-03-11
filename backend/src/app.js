@@ -12,19 +12,20 @@ import apiRoutes, { webhookRouter } from "./routes/index.js";
 
 const app = express();
 
-// ─── Security headers ────────────────────────────────────────
+// ─── Security headers ─────────────────────────────
 app.use(helmet());
 
-// ─── Allowed origins setup ───────────────────────────────────
-const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
-  : [];
+// ─── Allowed origins ──────────────────────────────
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 
-// ─── CORS configuration ──────────────────────────────────────
+// ─── CORS configuration (Express 5 compatible) ───
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // allow non-browser requests (Postman, curl, server-to-server)
+    origin(origin, callback) {
+      // allow server-to-server or Postman
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
@@ -40,26 +41,23 @@ app.use(
   })
 );
 
-// Handle preflight requests
-app.options("*", cors());
-
-// ─── Webhook routes (BEFORE body parsers — Stripe needs raw body) ─
+// ─── Webhooks (before body parser) ────────────────
 app.use("/webhooks", webhookRouter);
 
-// ─── Body parsers ─────────────────────────────────────────────
+// ─── Body parsers ─────────────────────────────────
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
-// ─── Request logging ─────────────────────────────────────────
+// ─── Request logging ──────────────────────────────
 app.use(requestLogger);
 
-// ─── Rate limiting (global) ──────────────────────────────────
+// ─── Rate limiter ─────────────────────────────────
 app.use("/api", globalLimiter);
 
-// ─── Clerk auth middleware ───────────────────────────────────
+// ─── Clerk authentication ─────────────────────────
 app.use(clerkMiddleware());
 
-// ─── Health & root ───────────────────────────────────────────
+// ─── Root route ───────────────────────────────────
 app.get("/", (_req, res) => {
   res.json({
     success: true,
@@ -67,6 +65,7 @@ app.get("/", (_req, res) => {
   });
 });
 
+// ─── Health check ─────────────────────────────────
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
@@ -75,15 +74,15 @@ app.get("/health", (_req, res) => {
   });
 });
 
-// ─── Swagger docs (disabled in production) ───────────────────
+// ─── Swagger docs (non-production) ────────────────
 if (process.env.NODE_ENV !== "production") {
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 }
 
-// ─── API routes ───────────────────────────────────────────────
+// ─── API routes ───────────────────────────────────
 app.use("/api", apiRoutes);
 
-// ─── Error handling ───────────────────────────────────────────
+// ─── Error handling ───────────────────────────────
 app.use(notFoundHandler);
 app.use(errorHandler);
 
