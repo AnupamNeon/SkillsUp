@@ -11,7 +11,7 @@ const requiredVars = [
 const optionalVars = {
   NODE_ENV: 'development',
   PORT: '5000',
-  CURRENCY: 'inr',                   // ← changed default to inr
+  CURRENCY: 'inr',                   
   CORS_ORIGIN: '*',
   ADMIN_CLERK_USER_IDS: '',
   RATE_LIMIT_WINDOW_MS: '900000',

@@ -1,15 +1,20 @@
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from "lucide-react";
 
-export default function Loading({ text = 'Loading…', className = '' }) {
+export default function Loading({ text = "Loading…", className = "" }) {
   return (
-    <div className={`flex flex-col items-center justify-center gap-4 py-24 ${className}`}>
+    <div
+      className={`flex flex-col items-center justify-center gap-4 py-24 ${className}`}
+    >
       <div className="relative">
-        <div className="absolute inset-0 rounded-full bg-blue-400/20 blur-xl animate-pulse" />
-        <div className="relative rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 p-4">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        {/* Subtle glow using primary variable, stripped of flashy gradients */}
+        <div className="absolute inset-0 animate-pulse rounded-full bg-[var(--primary)] opacity-10 blur-xl" />
+        
+        {/* Clean, system-aligned surface */}
+        <div className="relative rounded-full border border-[var(--primary)]/10 bg-[var(--primary-light)] p-4 shadow-sm">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--primary)]" />
         </div>
       </div>
-      <p className="text-sm font-medium text-gray-400">{text}</p>
+      <p className="text-sm font-medium text-[var(--text-secondary)]">{text}</p>
     </div>
   );
 }

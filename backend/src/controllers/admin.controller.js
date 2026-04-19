@@ -109,29 +109,69 @@ export const deleteUser = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
   if (userId === req.userId) {
-    throw ApiError.badRequest('You cannot delete your own account');
+    throw ApiError.badRequest("You cannot delete your own account");
   }
 
   const user = await User.findById(userId);
-  if (!user) throw ApiError.notFound('User not found');
+  if (!user) throw ApiError.notFound("User not found");
 
-  // Delete from Clerk
+  // 🔒 Start transaction
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // 🔍 Check dependencies inside transaction
+    const [purchases, quizAttempts, courses] = await Promise.all([
+      Purchase.countDocuments({ userId }).session(session),
+      QuizAttempt.countDocuments({ userId }).session(session),
+      Course.countDocuments({ educator: userId }).session(session),
+    ]);
+
+    if (purchases > 0 || quizAttempts > 0 || courses > 0) {
+      throw ApiError.badRequest(
+        `Cannot delete user with existing data. ` +
+          `Found ${purchases} purchases, ${quizAttempts} quiz attempts, ${courses} courses. ` +
+          `Consider deactivating the account instead.`
+      );
+    }
+
+    // 🧹 Cleanup related collections
+    await Promise.all([
+      CourseProgress.deleteMany({ userId }).session(session),
+      // add more cleanup here if needed
+    ]);
+
+    // 🗑️ Delete user
+    await User.findByIdAndDelete(userId).session(session);
+
+    await session.commitTransaction();
+    session.endSession();
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+
+  // 🌐 External deletion (outside transaction)
   try {
     await clerkClient.users.deleteUser(userId);
   } catch (err) {
-    logger.warn('Clerk user deletion failed (may already be deleted)', {
+    logger.warn("Clerk user deletion failed (may already be deleted)", {
       userId,
       error: err.message,
     });
   }
 
-  await User.findByIdAndDelete(userId);
+  logger.info("User deleted", {
+    deletedUserId: userId,
+    byAdmin: req.userId,
+  });
 
-  logger.info('User deleted', { deletedUserId: userId, byAdmin: req.userId });
-
-  res.json({ success: true, message: 'User deleted' });
+  res.json({
+    success: true,
+    message: "User deleted",
+  });
 });
-
 /**
  * GET /api/admin/dashboard
  * Aggregate platform stats.

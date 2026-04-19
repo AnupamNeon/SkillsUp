@@ -57,21 +57,22 @@ export default function CourseList() {
     minPrice || maxPrice || sortBy !== "createdAt" || sortOrder !== "desc";
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      {/* Header */}
+    <div className="section">
+      {/* HEADER */}
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900">
+        <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">
           Explore Courses
         </h1>
-        <p className="mt-2 text-gray-500">
+        <p className="mt-2 text-[var(--text-secondary)]">
           Discover courses that will help you grow
         </p>
       </div>
 
-      {/* Search bar */}
+      {/* SEARCH & FILTER TOGGLE */}
       <form onSubmit={handleSearch} className="mb-6 flex gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
+          {/* Refactored: Rule 7 - Applied .input utility */}
           <input
             type="text"
             value={search}
@@ -80,37 +81,37 @@ export default function CourseList() {
               setPage(1);
             }}
             placeholder="Search courses…"
-            className="w-full rounded-2xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm shadow-sm transition-all placeholder:text-gray-400 focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+            className="input pl-11"
           />
         </div>
         <button
           type="button"
           onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-2 rounded-2xl border px-5 py-3 text-sm font-medium transition-all ${
+          className={`flex items-center gap-2 rounded-xl border px-5 py-3 text-sm font-bold transition-all ${
             showFilters || hasActiveFilters
-              ? "border-blue-200 bg-blue-50 text-blue-700 shadow-sm"
-              : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm"
+              ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)] shadow-sm"
+              : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
           }`}
         >
           <SlidersHorizontal className="h-4 w-4" />
           Filters
           {hasActiveFilters && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--primary)] text-[10px] font-bold text-white">
               !
             </span>
           )}
         </button>
       </form>
 
-      {/* Filters */}
+      {/* FILTERS PANEL */}
       <div
         className={`overflow-hidden transition-all duration-300 ${
-          showFilters ? "mb-6 max-h-40 opacity-100" : "max-h-0 opacity-0"
+          showFilters ? "mb-8 max-h-60 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="flex flex-wrap items-end gap-4 rounded-2xl border border-gray-200/60 bg-white p-5 shadow-sm">
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+        <div className="flex flex-wrap items-end gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm">
+          <div className="flex-1 min-w-[120px]">
+            <label className="mb-1.5 block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
               Min Price
             </label>
             <input
@@ -121,12 +122,12 @@ export default function CourseList() {
                 setMinPrice(e.target.value);
                 setPage(1);
               }}
-              className="w-28 rounded-xl border border-gray-200 px-3 py-2.5 text-sm transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+              className="input"
               placeholder="0"
             />
           </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+          <div className="flex-1 min-w-[120px]">
+            <label className="mb-1.5 block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
               Max Price
             </label>
             <input
@@ -137,12 +138,12 @@ export default function CourseList() {
                 setMaxPrice(e.target.value);
                 setPage(1);
               }}
-              className="w-28 rounded-xl border border-gray-200 px-3 py-2.5 text-sm transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+              className="input"
               placeholder="999"
             />
           </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+          <div className="flex-1 min-w-[150px]">
+            <label className="mb-1.5 block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
               Sort By
             </label>
             <select
@@ -151,15 +152,15 @@ export default function CourseList() {
                 setSortBy(e.target.value);
                 setPage(1);
               }}
-              className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+              className="input cursor-pointer"
             >
-              <option value="createdAt">Date</option>
+              <option value="createdAt">Date Created</option>
               <option value="coursePrice">Price</option>
-              <option value="courseTitle">Title</option>
+              <option value="courseTitle">Course Title</option>
             </select>
           </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+          <div className="flex-1 min-w-[150px]">
+            <label className="mb-1.5 block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
               Order
             </label>
             <select
@@ -168,7 +169,7 @@ export default function CourseList() {
                 setSortOrder(e.target.value);
                 setPage(1);
               }}
-              className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+              className="input cursor-pointer"
             >
               <option value="desc">Descending</option>
               <option value="asc">Ascending</option>
@@ -176,52 +177,49 @@ export default function CourseList() {
           </div>
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+            className="flex h-[46px] items-center gap-1.5 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-bold text-[var(--text-secondary)] transition-all hover:bg-[#FFEBEE] hover:text-[var(--danger)] hover:border-[var(--danger)]"
           >
-            <X className="h-3.5 w-3.5" /> Clear All
+            <X className="h-4 w-4" /> Clear
           </button>
         </div>
       </div>
 
-      {/* Course grid */}
+      {/* CONTENT GRID */}
       {loading ? (
         <Loading />
       ) : courses.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24">
-          <div className="rounded-2xl bg-gray-100 p-6">
-            <BookOpen className="h-12 w-12 text-gray-300" />
+        /* Refactored: Rule 10 - Removed gradients from empty state */
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="rounded-full bg-[var(--bg)] p-8 mb-4">
+            <BookOpen className="h-12 w-12 text-[var(--text-secondary)] opacity-50" />
           </div>
-          <p className="mt-4 text-lg font-semibold text-gray-900">
+          <h3 className="text-xl font-bold text-[var(--text-primary)]">
             No courses found
-          </p>
-          <p className="mt-1 text-sm text-gray-500">
-            Try adjusting your search or filters
+          </h3>
+          <p className="mt-2 text-[var(--text-secondary)] font-medium">
+            Try adjusting your search or filters to find what you're looking for.
           </p>
           <button
             onClick={clearFilters}
-            className="mt-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25"
+            className="btn-primary mt-6"
           >
-            Clear Filters
+            Clear All Filters
           </button>
         </div>
       ) : (
         <>
-          {/* Results count */}
-          <p className="mb-4 text-sm text-gray-500">
-            Showing{" "}
-            <span className="font-semibold text-gray-700">
-              {courses.length}
-            </span>{" "}
-            {pagination?.totalItems && (
-              <>
-                of{" "}
-                <span className="font-semibold text-gray-700">
-                  {pagination.totalItems}
-                </span>
-              </>
-            )}{" "}
-            courses
-          </p>
+          <div className="mb-6 flex items-center justify-between">
+            <p className="text-sm font-bold text-[var(--text-secondary)]">
+              Showing{" "}
+              <span className="text-[var(--text-primary)]">{courses.length}</span>{" "}
+              {pagination?.total && (
+                <>
+                  of <span className="text-[var(--text-primary)]">{pagination.total}</span>
+                </>
+              )}{" "}
+              courses
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {courses.map((c) => (

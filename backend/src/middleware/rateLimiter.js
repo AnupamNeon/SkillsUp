@@ -33,6 +33,6 @@ export const purchaseLimiter = createLimiter(
 /** Admin write operations */
 export const adminWriteLimiter = createLimiter(
   15 * 60 * 1000,
-  50,
+  30,
   'Too many admin requests, please try again later.'
 );

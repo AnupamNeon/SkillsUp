@@ -1,6 +1,37 @@
 @import "tailwindcss";
 
-/* ───────────────── Theme Tokens ───────────────── */
+/* ───────────────── Foundation & Tokens ───────────────── */
+
+@layer base {
+  :root {
+    --primary: #4F46E5;       
+    --primary-hover: #4338CA; 
+    --primary-active: #3730A3;
+    --primary-light: #EEF2FF; 
+
+    --success: #10B981; 
+    --accent: #F97316;  
+    --danger: #EF4444; 
+
+    /* Backgrounds */
+    --bg: #F8FAFC;     
+    --surface: #FFFFFF;
+
+    /* Typography (shifted to Slate for a richer, premium feel) */
+    --text-primary: #0F172A; 
+    --text-secondary: #596372; 
+
+    --border: #E2E8F0;
+  }
+
+  [data-theme="dark"] {
+    --bg: #0F172A;
+    --surface: #1E293B;
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --border: #334155;
+  }
+}
 
 @theme {
   --font-sans:
@@ -16,43 +47,23 @@
 /* ───────────────── Animations ───────────────── */
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes shimmer {
-  from {
-    background-position: -200% 0;
-  }
-  to {
-    background-position: 200% 0;
-  }
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
 }
 
 /* ───────────────── Base Styles ───────────────── */
@@ -66,8 +77,8 @@
 
   body {
     font-family: var(--font-sans);
-    color: var(--color-gray-900);
-    background: var(--color-white);
+    color: var(--text-primary);
+    background: var(--bg);
     overflow-x: hidden;
   }
 
@@ -78,12 +89,12 @@
   }
 
   ::selection {
-    background: var(--color-blue-100);
-    color: var(--color-blue-900);
+    background: var(--primary-light);
+    color: var(--primary-active);
   }
 
   *:focus-visible {
-    outline: 2px solid var(--color-blue-500);
+    outline: 2px solid var(--primary);
     outline-offset: 2px;
   }
 }
@@ -96,12 +107,6 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-@utility glass-dark {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
 @utility text-gradient {
   background-clip: text;
   -webkit-background-clip: text;
@@ -111,9 +116,9 @@
 @utility shimmer-bg {
   background: linear-gradient(
     90deg,
-    var(--color-gray-200) 25%,
-    var(--color-gray-100) 50%,
-    var(--color-gray-200) 75%
+    var(--border) 25%,
+    var(--bg) 50%,
+    var(--border) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 2s infinite linear;
@@ -127,78 +132,89 @@
   display: none;
 }
 
+@utility badge {
+  @apply inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full;
+}
+
 /* ───────────────── Components ───────────────── */
 
 @layer components {
+
   /* Buttons */
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2
-    rounded-xl px-5 py-2.5 text-sm font-semibold
-    transition-all text-white
-    bg-gradient-to-r from-blue-600 to-indigo-600
-    shadow-lg shadow-blue-500/25
-    hover:-translate-y-0.5 hover:shadow-xl;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all text-white;
+    background-color: var(--primary);
+  }
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2
-    rounded-xl px-5 py-2.5 text-sm font-semibold
-    transition-all
-    border border-gray-200 bg-white text-gray-700
-    hover:bg-gray-50 hover:border-gray-300;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all;
+    background-color: var(--primary-light);
+    color: var(--primary);
+  }
+  .btn-secondary:hover {
+    opacity: 0.85;
   }
 
-  .btn-danger {
-    @apply inline-flex items-center justify-center gap-2
-    rounded-xl px-5 py-2.5 text-sm font-semibold
-    transition-all text-white
-    bg-gradient-to-r from-red-500 to-rose-600
-    shadow-lg shadow-red-500/25;
+  .btn-success {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all text-white;
+    background-color: var(--success);
+  }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all text-white;
+    background-color: var(--accent);
   }
 
   /* Inputs */
 
   .input {
-    @apply w-full rounded-lg border border-gray-200
-    px-4 py-2.5 text-sm bg-white
-    placeholder:text-gray-400
-    focus:border-blue-400 focus:ring-4
-    focus:ring-blue-500/10 outline-none;
+    @apply w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-all;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+  .input::placeholder {
+    color: var(--text-secondary);
+  }
+  .input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15);
   }
 
   /* Cards */
 
   .card {
-    @apply rounded-xl border border-gray-200/70
-    bg-white shadow-sm
-    hover:shadow-lg transition-all;
+    @apply rounded-xl transition-all flex flex-col;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 8px 24px rgba(25, 118, 210, 0.12);
   }
 
-  /* Badge */
-
-  .badge {
-    @apply inline-flex items-center gap-1
-    px-2.5 py-1 text-xs font-semibold
-    rounded-full;
-  }
+  /* Badges */
 
   .badge-success {
-    @apply inline-flex items-center gap-1
-    px-2.5 py-1 text-xs font-semibold
-    rounded-full bg-emerald-50 text-emerald-700;
+    @apply badge;
+    background-color: #E8F5E9;
+    color: var(--success);
   }
 
   .badge-warning {
-    @apply inline-flex items-center gap-1
-    px-2.5 py-1 text-xs font-semibold
-    rounded-full bg-amber-50 text-amber-700;
+    @apply badge;
+    background-color: #FFF3E0;
+    color: var(--accent);
   }
 
   .badge-danger {
-    @apply inline-flex items-center gap-1
-    px-2.5 py-1 text-xs font-semibold
-    rounded-full bg-red-50 text-red-700;
+    @apply badge;
+    background-color: #FFEBEE;
+    color: var(--danger);
   }
 
   /* Layout */

@@ -12,58 +12,63 @@ export default function Pagination({ pagination, onPageChange }) {
 
   return (
     <div className="flex items-center justify-center gap-1.5 pt-8">
+      {/* Previous Button */}
       <button
         disabled={!hasPrevPage}
         onClick={() => onPageChange(page - 1)}
-        className="rounded-xl border border-gray-200 p-2.5 text-gray-500 transition-all hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm disabled:opacity-30 disabled:hover:border-gray-200 disabled:hover:bg-transparent disabled:hover:shadow-none"
+        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2.5 text-[var(--text-secondary)] transition-all hover:border-[var(--primary)] hover:text-[var(--primary)] hover:shadow-sm disabled:opacity-40 disabled:hover:border-[var(--border)] disabled:hover:text-[var(--text-secondary)] disabled:hover:shadow-none"
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
 
+      {/* First Page */}
       {start > 1 && (
         <>
           <button
             onClick={() => onPageChange(1)}
-            className="rounded-xl border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50"
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-sm font-semibold text-[var(--text-secondary)] transition-all hover:border-[var(--primary)] hover:text-[var(--primary)]"
           >
             1
           </button>
-          {start > 2 && <span className="px-1 text-gray-300">•••</span>}
+          {start > 2 && <span className="px-1 text-[var(--text-secondary)] opacity-60">•••</span>}
         </>
       )}
 
+      {/* Page Numbers */}
       {pages.map((p) => (
         <button
           key={p}
           onClick={() => onPageChange(p)}
           className={`rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all ${
             p === page
-              ? "border-blue-600 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25"
-              : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+              ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-sm" // Active state: solid primary
+              : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--primary)] hover:text-[var(--primary)]" // Inactive state
           }`}
         >
           {p}
         </button>
       ))}
 
+      {/* Last Page */}
       {end < totalPages && (
         <>
           {end < totalPages - 1 && (
-            <span className="px-1 text-gray-300">•••</span>
+            <span className="px-1 text-[var(--text-secondary)] opacity-60">•••</span>
           )}
           <button
             onClick={() => onPageChange(totalPages)}
-            className="rounded-xl border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50"
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-sm font-semibold text-[var(--text-secondary)] transition-all hover:border-[var(--primary)] hover:text-[var(--primary)]"
           >
             {totalPages}
           </button>
         </>
       )}
 
+      {/* Next Button */}
       <button
         disabled={!hasNextPage}
         onClick={() => onPageChange(page + 1)}
-        className="rounded-xl border border-gray-200 p-2.5 text-gray-500 transition-all hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm disabled:opacity-30 disabled:hover:border-gray-200 disabled:hover:bg-transparent disabled:hover:shadow-none"
+        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2.5 text-[var(--text-secondary)] transition-all hover:border-[var(--primary)] hover:text-[var(--primary)] hover:shadow-sm disabled:opacity-40 disabled:hover:border-[var(--border)] disabled:hover:text-[var(--text-secondary)] disabled:hover:shadow-none"
       >
         <ChevronRight className="h-4 w-4" />
       </button>

@@ -1,7 +1,7 @@
 {
   "name": "role-lms-backend",
   "version": "2.0.0",
-  "description": "Role-based Learning Management System API with RBAC, search, pagination, and production-ready architecture",
+  "description": "Role-based Learning Management System API with RBAC, search, pagination, quizzes and production-ready architecture",
   "main": "server.js",
   "type": "module",
   "engines": {
@@ -30,6 +30,7 @@
   "license": "MIT",
   "dependencies": {
     "@clerk/express": "^1.7.76",
+    "@google/generative-ai": "^0.24.1",
     "cloudinary": "^2.9.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
@@ -43,9 +44,8 @@
     "multer": "^2.1.0",
     "stripe": "^20.4.0",
     "svix": "^1.86.0",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "youtubei.js": "^17.0.1"
   },
   "devDependencies": {
     "eslint": "^10.0.2",

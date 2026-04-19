@@ -1,21 +1,22 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import { ClerkProvider } from '@clerk/clerk-react';
-import { Toaster } from 'react-hot-toast';
-import App from './App';
-import { AppProvider } from './context/AppContext';
-import './index.css';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { ClerkProvider } from "@clerk/clerk-react";
+import { Toaster } from "react-hot-toast";
+import App from "./App";
+import { AppProvider } from "./context/AppContext";
+import "./index.css";
 
 const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!clerkKey) {
-  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env');
+  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY in .env");
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
+      {/* Clerk Provider maintains the authentication layer */}
       <ClerkProvider publishableKey={clerkKey} afterSignOutUrl="/">
         <AppProvider>
           <Toaster
@@ -23,22 +24,32 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             toastOptions={{
               duration: 3000,
               style: {
-                borderRadius: '16px',
-                padding: '12px 20px',
-                fontSize: '14px',
-                fontWeight: '500',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                background: "var(--surface)",
+                color: "var(--text-primary)",
+                borderRadius: "12px", // Matches Card radius
+                padding: "16px",
+                fontSize: "14px",
+                fontWeight: "700", // Rule: Bold for readability
+                border: "1px solid var(--border)",
+                boxShadow: "0 8px 24px rgba(25, 118, 210, 0.12)", // Rule 3 Shadow
               },
               success: {
                 iconTheme: {
-                  primary: '#10b981',
-                  secondary: '#fff',
+                  primary: "#4CAF50", // Rule: var(--success)
+                  secondary: "#fff",
                 },
               },
               error: {
                 iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#fff',
+                  primary: "#E53935", // Rule: var(--danger)
+                  secondary: "#fff",
+                },
+              },
+              // Info/Loading toasts use Primary Blue
+              loading: {
+                iconTheme: {
+                  primary: "#1976D2", // Rule: var(--primary)
+                  secondary: "#fff",
                 },
               },
             }}
@@ -47,5 +58,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </AppProvider>
       </ClerkProvider>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

@@ -1,22 +1,33 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { fetchEducatorCourses, deleteCourse, togglePublish } from "../../api";
 import { formatPrice } from "../../utils/currency";
+import { useSafeState } from "../../utils/hooks";
+import { PAGINATION } from "../../utils/constants";
 import Pagination from "../../components/Pagination";
 import Loading from "../../components/Loading";
-import { Pencil, Trash2, Eye, EyeOff, Plus, BookOpen } from "lucide-react";
+import { Empty, Button } from "../../components/ui";
+import {
+  Pencil,
+  Trash2,
+  Eye,
+  EyeOff,
+  Plus,
+  BookOpen,
+  Sparkles,
+} from "lucide-react";
 
 export default function EducatorCourses() {
-  const [courses, setCourses] = useState([]);
-  const [pagination, setPagination] = useState(null);
+  const [courses, setCourses] = useSafeState([]);
+  const [pagination, setPagination] = useSafeState(null);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useSafeState(true);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await fetchEducatorCourses({ page, limit: 10 });
+      const { data } = await fetchEducatorCourses({ page, limit: PAGINATION.DEFAULT_LIMIT });
       setCourses(data.items);
       setPagination(data.pagination);
     } catch {
@@ -24,11 +35,11 @@ export default function EducatorCourses() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page]);
 
   useEffect(() => {
     load();
-  }, [page]);
+  }, [load]);
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this course? This cannot be undone.")) return;
@@ -47,8 +58,8 @@ export default function EducatorCourses() {
       toast.success(data.message);
       setCourses((prev) =>
         prev.map((c) =>
-          c._id === id ? { ...c, isPublished: data.isPublished } : c,
-        ),
+          c._id === id ? { ...c, isPublished: data.isPublished } : c
+        )
       );
     } catch (err) {
       toast.error(err.message);
@@ -64,32 +75,23 @@ export default function EducatorCourses() {
           <h1 className="text-3xl font-extrabold text-gray-900">My Courses</h1>
           <p className="mt-1 text-gray-500">Manage and track your courses</p>
         </div>
-        <Link
-          to="/educator/courses/new"
-          className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:-translate-y-0.5"
-        >
+
+        <Link to="/educator/courses/new" className="btn-primary">
           <Plus className="h-4 w-4" /> New Course
         </Link>
       </div>
 
       {courses.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24">
-          <div className="rounded-3xl bg-gradient-to-br from-blue-50 to-indigo-50 p-8">
-            <BookOpen className="h-16 w-16 text-blue-300" />
-          </div>
-          <h3 className="mt-6 text-lg font-bold text-gray-900">
-            No courses yet
-          </h3>
-          <p className="mt-2 text-sm text-gray-500">
-            Create your first course and start teaching!
-          </p>
-          <Link
-            to="/educator/courses/new"
-            className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25"
-          >
-            <Plus className="h-4 w-4" /> Create Course
-          </Link>
-        </div>
+        <Empty
+          icon={BookOpen}
+          title="No courses yet"
+          desc="Create your first course and start teaching!"
+          action={
+            <Link to="/educator/courses/new" className="btn-primary">
+              <Plus className="h-4 w-4" /> Create Course
+            </Link>
+          }
+        />
       ) : (
         <>
           <div className="overflow-hidden rounded-2xl border border-gray-200/60 bg-white shadow-sm">
@@ -114,12 +116,10 @@ export default function EducatorCourses() {
                     </th>
                   </tr>
                 </thead>
+
                 <tbody className="divide-y divide-gray-50">
                   {courses.map((c) => (
-                    <tr
-                      key={c._id}
-                      className="transition-colors hover:bg-gray-50/50"
-                    >
+                    <tr key={c._id} className="transition-colors hover:bg-gray-50/50">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <img
@@ -132,14 +132,17 @@ export default function EducatorCourses() {
                           </span>
                         </div>
                       </td>
+
                       <td className="px-6 py-4 font-semibold text-gray-700">
                         {formatPrice(c.coursePrice)}
                       </td>
+
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
                           {c.enrolledStudents?.length || 0}
                         </span>
                       </td>
+
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
@@ -156,8 +159,17 @@ export default function EducatorCourses() {
                           {c.isPublished ? "Published" : "Draft"}
                         </span>
                       </td>
+
                       <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="flex items-center justify-end gap-2 flex-wrap">
+                          <Link
+                            to={`/educator/courses/${c._id}/quiz`}
+                            className="flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-semibold text-purple-700 transition-all hover:bg-purple-100"
+                          >
+                            <Sparkles className="h-4 w-4" />
+                            Quiz
+                          </Link>
+
                           <button
                             onClick={() => handleToggle(c._id, c.isPublished)}
                             title={c.isPublished ? "Unpublish" : "Publish"}
@@ -169,12 +181,14 @@ export default function EducatorCourses() {
                               <Eye className="h-4 w-4" />
                             )}
                           </button>
+
                           <Link
                             to={`/educator/courses/${c._id}/edit`}
                             className="rounded-xl border border-gray-200 p-2 text-gray-500 transition-all hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 hover:shadow-sm"
                           >
                             <Pencil className="h-4 w-4" />
                           </Link>
+
                           <button
                             onClick={() => handleDelete(c._id)}
                             className="rounded-xl border border-gray-200 p-2 text-gray-500 transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600 hover:shadow-sm"
@@ -189,6 +203,7 @@ export default function EducatorCourses() {
               </table>
             </div>
           </div>
+
           <Pagination pagination={pagination} onPageChange={setPage} />
         </>
       )}

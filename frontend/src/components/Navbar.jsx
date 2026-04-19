@@ -13,11 +13,11 @@ import {
 import Logo from '/logo-1.jpeg';
 
 const linkClass = ({ isActive }) =>
-  `relative text-sm font-medium transition-all duration-200 ${
+  `relative text-sm font-semibold transition-all duration-200 ${
     isActive
-      ? 'text-blue-600'
-      : 'text-gray-600 hover:text-gray-900'
-  } after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:rounded-full after:bg-gradient-to-r after:from-blue-600 after:to-indigo-600 after:transition-all after:duration-300 ${
+      ? 'text-[var(--primary)]'
+      : 'text-[var(--text-secondary)] hover:text-[var(--primary)]'
+  } after:absolute after:-bottom-1.5 after:left-0 after:h-0.5 after:rounded-full after:bg-[var(--primary)] after:transition-all after:duration-300 ${
     isActive ? 'after:w-full' : 'after:w-0 hover:after:w-full'
   }`;
 
@@ -25,29 +25,26 @@ const ROLE_CONFIG = {
   admin: {
     label: 'Admin',
     icon: Shield,
-    gradient: 'from-red-500 to-rose-600',
-    bgColor: 'bg-red-50',
-    textColor: 'text-red-700',
-    borderColor: 'border-red-200/50',
-    ringColor: 'ring-red-500/20',
+    dot: 'bg-[var(--danger)]',
+    bgColor: 'bg-[#FEF2F2]', // Light red tint for surface
+    textColor: 'text-[var(--danger)]',
+    borderColor: 'border-[var(--danger)]/30',
   },
   educator: {
     label: 'Educator',
     icon: BookOpen,
-    gradient: 'from-purple-500 to-violet-600',
-    bgColor: 'bg-purple-50',
-    textColor: 'text-purple-700',
-    borderColor: 'border-purple-200/50',
-    ringColor: 'ring-purple-500/20',
+    dot: 'bg-[var(--primary)]',
+    bgColor: 'bg-[var(--primary-light)]',
+    textColor: 'text-[var(--primary)]',
+    borderColor: 'border-[var(--primary)]/30',
   },
   student: {
     label: 'Student',
     icon: User,
-    gradient: 'from-emerald-500 to-teal-600',
-    bgColor: 'bg-emerald-50',
-    textColor: 'text-emerald-700',
-    borderColor: 'border-emerald-200/50',
-    ringColor: 'ring-emerald-500/20',
+    dot: 'bg-[var(--success)]',
+    bgColor: 'bg-[#ECFDF5]', // Light green tint for surface
+    textColor: 'text-[var(--success)]',
+    borderColor: 'border-[var(--success)]/30',
   },
 };
 
@@ -58,9 +55,9 @@ function RoleBadge({ role, size = 'default' }) {
   if (size === 'small') {
     return (
       <span
-        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ${config.bgColor} ${config.textColor} ${config.borderColor} ${config.ringColor}`}
+        className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${config.bgColor} ${config.textColor} ${config.borderColor}`}
       >
-        <span className={`h-1.5 w-1.5 rounded-full bg-gradient-to-r ${config.gradient}`} />
+        <span className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />
         {config.label}
       </span>
     );
@@ -68,9 +65,9 @@ function RoleBadge({ role, size = 'default' }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ring-1 ${config.bgColor} ${config.textColor} ${config.borderColor} ${config.ringColor}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ${config.bgColor} ${config.textColor} ${config.borderColor}`}
     >
-      <Icon className="h-3 w-3" />
+      <Icon className="h-3.5 w-3.5" />
       {config.label}
     </span>
   );
@@ -101,8 +98,8 @@ export default function Navbar() {
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'border-b border-gray-200/50 bg-white/80 shadow-lg shadow-gray-200/20 backdrop-blur-xl'
-          : 'border-b border-transparent bg-white/60 backdrop-blur-md'
+          ? 'border-b border-[var(--border)] bg-[var(--surface)]/80 shadow-sm backdrop-blur-xl'
+          : 'border-b border-transparent bg-[var(--surface)]/60 backdrop-blur-md'
       }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -111,8 +108,8 @@ export default function Navbar() {
         <Link to="/" className="flex items-center">
           <img
             src={Logo}
-            alt="Role LMS"
-            className="h-15 w-full"
+            alt="SkillsUp LMS"
+            className="h-10 w-auto rounded-md"
           />
         </Link>
 
@@ -151,13 +148,14 @@ export default function Navbar() {
           {!loading && !isSignedIn && (
             <>
               <SignInButton mode="modal">
-                <button className="rounded-xl border border-gray-200 px-5 py-2 text-sm font-medium text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm">
+                <button className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-2 text-sm font-semibold text-[var(--text-primary)] transition-all hover:border-[var(--primary)] hover:text-[var(--primary)] hover:shadow-sm">
                   Sign In
                 </button>
               </SignInButton>
 
               <SignUpButton mode="modal">
-                <button className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-blue-500/25 transition-all hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5">
+                {/* Button Primary Rules applied completely */}
+                <button className="rounded-xl bg-[var(--primary)] px-5 py-2 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-[var(--primary-hover)] hover:shadow-[0_8px_24px_rgba(79,70,229,0.24)]">
                   <span className="flex items-center gap-1.5">
                     <Sparkles className="h-3.5 w-3.5" />
                     Get Started
@@ -170,7 +168,7 @@ export default function Navbar() {
           {isSignedIn && (
             <div className="flex items-center gap-3">
               {user && <RoleBadge role={user.role} />}
-              <div className="ring-2 ring-gray-100 rounded-full">
+              <div className="rounded-full ring-2 ring-[var(--border)] transition-all hover:ring-[var(--primary)]">
                 <UserButton afterSignOutUrl="/" />
               </div>
             </div>
@@ -179,7 +177,7 @@ export default function Navbar() {
 
         {/* Mobile toggle */}
         <button
-          className="relative rounded-lg p-2 transition-colors hover:bg-gray-100 md:hidden"
+          className="relative rounded-lg p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg)] hover:text-[var(--text-primary)] md:hidden"
           onClick={() => setOpen(!open)}
         >
           <div className="relative h-5 w-5">
@@ -191,7 +189,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       <div
-        className={`overflow-hidden border-t border-gray-100 bg-white/95 backdrop-blur-xl transition-all duration-300 md:hidden ${
+        className={`overflow-hidden border-t border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur-xl transition-all duration-300 md:hidden ${
           open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
@@ -237,32 +235,34 @@ export default function Navbar() {
             </>
           )}
 
-          <div className="mt-2 flex items-center gap-3 border-t border-gray-100 pt-4">
+          <div className="mt-2 flex items-center gap-3 border-t border-[var(--border)] pt-4 pb-2">
 
             {!loading && !isSignedIn && (
-              <>
+              <div className="flex w-full flex-col gap-2">
                 <SignInButton mode="modal">
-                  <button className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium">
+                  <button className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition-all hover:border-[var(--primary)] hover:text-[var(--primary)]">
                     Sign In
                   </button>
                 </SignInButton>
 
                 <SignUpButton mode="modal">
-                  <button className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white">
+                  <button className="w-full rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-[var(--primary-hover)]">
                     Get Started
                   </button>
                 </SignUpButton>
-              </>
+              </div>
             )}
 
             {isSignedIn && (
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <UserButton afterSignOutUrl="/" />
+                  <div className="rounded-full ring-2 ring-[var(--border)]">
+                    <UserButton afterSignOutUrl="/" />
+                  </div>
 
                   {user && (
                     <div className="flex flex-col gap-1">
-                      <span className="text-sm font-semibold text-gray-900">
+                      <span className="text-sm font-bold text-[var(--text-primary)]">
                         {user.name}
                       </span>
                       <RoleBadge role={user.role} size="small" />

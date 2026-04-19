@@ -1,6 +1,4 @@
-/**
- * Extract and sanitise pagination params from the query string.
- */
+//Extract and sanitise pagination params from the query string.
 export function getPaginationParams(query) {
   const page = Math.max(1, parseInt(query.page, 10) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 10));
@@ -8,9 +6,7 @@ export function getPaginationParams(query) {
   return { page, limit, skip };
 }
 
-/**
- * Build a standardised pagination envelope.
- */
+// Build a standardised pagination envelope.
 export function paginatedResponse(items, total, { page, limit }) {
   const totalPages = Math.ceil(total / limit);
   return {

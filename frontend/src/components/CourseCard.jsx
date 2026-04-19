@@ -1,7 +1,8 @@
+import React, { memo, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Rating from "./Rating";
 import { formatPrice } from "../utils/currency";
-import { Clock, Users } from "lucide-react";
+import { Clock } from "lucide-react";
 
 export function calcAvgRating(ratings = []) {
   if (!ratings.length) return 0;
@@ -12,85 +13,98 @@ export function discountedPrice(price, discount) {
   return parseFloat((price - (discount * price) / 100).toFixed(2));
 }
 
-export default function CourseCard({ course }) {
-  const avg = calcAvgRating(course.courseRatings);
-  const finalPrice = discountedPrice(course.coursePrice, course.discount);
+function CourseCard({ course }) {
+  const avg = useMemo(
+    () => calcAvgRating(course.courseRatings),
+    [course.courseRatings]
+  );
 
-  const totalLectures =
-    course.courseContent?.reduce(
-      (s, ch) => s + (ch.chapterContent?.length || 0),
-      0,
-    ) || 0;
+  const finalPrice = useMemo(
+    () => discountedPrice(course.coursePrice, course.discount),
+    [course.coursePrice, course.discount]
+  );
+
+  const totalLectures = useMemo(() => {
+    return (
+      course.courseContent?.reduce(
+        (s, ch) => s + (ch.chapterContent?.length || 0),
+        0
+      ) || 0
+    );
+  }, [course.courseContent]);
 
   return (
     <Link
       to={`/course/${course._id}`}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200/60 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-gray-200/50"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--primary)] hover:shadow-[0_8px_24px_rgba(79,70,229,0.12)]"
     >
-      {/* Image */}
-      <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+      {/* Thumbnail Area */}
+      <div className="relative aspect-video overflow-hidden bg-[var(--bg)] border-b border-[var(--border)]">
         <img
           src={course.courseThumbnail || "/placeholder.svg"}
           alt={course.courseTitle}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        {/* Overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
+        {/* Discount Badge - Solid Danger Color, No Gradients */}
         {course.discount > 0 && (
-          <span className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-red-500 to-rose-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-lg shadow-red-500/30">
+          <span className="absolute right-3 top-3 rounded-md bg-[var(--danger)] px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
             {course.discount}% OFF
           </span>
         )}
 
-        {/* Category-like badge */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-medium text-gray-700 shadow-sm backdrop-blur-sm">
-          <Clock className="h-3 w-3" />
+        {/* Lectures Pill */}
+        <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md bg-[var(--surface)]/95 px-2.5 py-1 text-[11px] font-semibold text-[var(--text-primary)] shadow-sm backdrop-blur-sm">
+          <Clock className="h-3 w-3 text-[var(--text-secondary)]" />
           {totalLectures} lectures
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content Area */}
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="mb-1.5 line-clamp-2 text-sm font-bold leading-snug text-gray-900 transition-colors group-hover:text-blue-600">
+        <h3 className="mb-2 line-clamp-2 text-base font-bold leading-snug text-[var(--text-primary)] transition-colors group-hover:text-[var(--primary)]">
           {course.courseTitle}
         </h3>
 
         {course.educator && (
           <div className="mb-3 flex items-center gap-2">
-            {course.educator.imageUrl && (
+            {course.educator.imageUrl ? (
               <img
                 src={course.educator.imageUrl}
                 alt={course.educator.name}
-                className="h-5 w-5 rounded-full object-cover ring-1 ring-gray-200"
+                className="h-6 w-6 rounded-full object-cover ring-1 ring-[var(--border)]"
               />
+            ) : (
+              <div className="h-6 w-6 rounded-full bg-[var(--primary-light)] ring-1 ring-[var(--border)]"></div>
             )}
-            <p className="text-xs text-gray-500">
+            <p className="text-xs font-medium text-[var(--text-secondary)]">
               {course.educator.name || "Educator"}
             </p>
           </div>
         )}
 
-        <div className="mb-3 flex items-center gap-2">
+        <div className="mb-4 flex items-center gap-2">
           <Rating value={avg} size="sm" />
-          <span className="text-xs font-medium text-gray-400">
+          <span className="text-xs font-semibold text-[var(--text-secondary)]">
             {avg.toFixed(1)} ({course.courseRatings?.length || 0})
           </span>
         </div>
 
-        {/* Divider */}
-        <div className="mt-auto border-t border-gray-100 pt-3">
+        {/* Footer / Pricing */}
+        <div className="mt-auto border-t border-[var(--border)] pt-4">
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-extrabold text-gray-900">
+            <span className="text-xl font-extrabold text-[var(--text-primary)]">
               {formatPrice(finalPrice)}
             </span>
+
             {course.discount > 0 && (
-              <span className="text-sm text-gray-400 line-through">
+              <span className="text-sm font-medium text-[var(--text-secondary)] line-through">
                 {formatPrice(course.coursePrice)}
               </span>
             )}
+
             {finalPrice <= 0 && (
-              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
+              <span className="ml-auto rounded-md bg-[#E8F5E9] px-2 py-1 text-[10px] font-bold tracking-wide text-[var(--success)] uppercase">
                 FREE
               </span>
             )}
@@ -100,3 +114,5 @@ export default function CourseCard({ course }) {
     </Link>
   );
 }
+
+export default memo(CourseCard);

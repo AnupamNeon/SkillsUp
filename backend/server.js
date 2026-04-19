@@ -1,9 +1,10 @@
 import 'dotenv/config';
 import { validateEnv } from './src/config/env.js';
 import logger from './src/utils/logger.js';
+import { initializeAI } from './src/config/ai.js';
 
-// Validate environment BEFORE importing anything that uses env vars
-validateEnv();
+// // Validate environment BEFORE importing anything that uses env vars
+// validateEnv();
 
 // Dynamic imports after env validation
 const { default: app } = await import('./src/app.js');
@@ -12,22 +13,22 @@ const { default: connectCloudinary } = await import('./src/config/cloudinary.js'
 
 const PORT = parseInt(process.env.PORT, 10);
 
-async function startServer() {
+const startServer = async () => {
   try {
+    validateEnv();
     await connectDB();
     await connectCloudinary();
+    initializeAI(); // ← Add this
 
+    const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
-      logger.info(`Server running on http://localhost:${PORT}`, {
-        env: process.env.NODE_ENV,
-        port: PORT,
-      });
+      logger.info(`Server running on port ${PORT}`);
     });
   } catch (error) {
-    logger.error('Failed to start server', { error: error.message });
+    logger.error('Server startup failed', { error: error.message });
     process.exit(1);
   }
-}
+};
 
 // ─── Graceful shutdown ────────────────────────────────────────
 const shutdown = (signal) => {

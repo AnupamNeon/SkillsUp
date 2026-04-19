@@ -1,24 +1,25 @@
 import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { fetchAdminUsers, updateUserRole, deleteUser } from "../../api";
+import { useSafeState } from "../../utils/hooks";
+import { ROLES, PAGINATION } from "../../utils/constants";
 import Pagination from "../../components/Pagination";
 import Loading from "../../components/Loading";
+import { Empty } from "../../components/ui";
 import { Search, Trash2, Users as UsersIcon } from "lucide-react";
 
-const ROLES = ["student", "educator", "admin"];
-
 export default function AdminUsers() {
-  const [users, setUsers] = useState([]);
-  const [pagination, setPagination] = useState(null);
+  const [users, setUsers] = useSafeState([]);
+  const [pagination, setPagination] = useSafeState(null);
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useSafeState("");
+  const [roleFilter, setRoleFilter] = useSafeState("");
+  const [loading, setLoading] = useSafeState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const params = { page, limit: 15 };
+      const params = { page, limit: PAGINATION.STUDENTS_LIMIT };
       if (search) params.search = search;
       if (roleFilter) params.role = roleFilter;
       const { data } = await fetchAdminUsers(params);
@@ -40,7 +41,7 @@ export default function AdminUsers() {
       await updateUserRole(userId, role);
       toast.success(`Role updated to ${role}`);
       setUsers((prev) =>
-        prev.map((u) => (u._id === userId ? { ...u, role } : u)),
+        prev.map((u) => (u._id === userId ? { ...u, role } : u))
       );
     } catch (err) {
       toast.error(err.message);
@@ -79,7 +80,7 @@ export default function AdminUsers() {
               setPage(1);
             }}
             placeholder="Search by name or email…"
-            className="w-full rounded-2xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm shadow-sm transition-all placeholder:text-gray-400 focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+            className="input pl-11"
           />
         </div>
         <select
@@ -88,10 +89,10 @@ export default function AdminUsers() {
             setRoleFilter(e.target.value);
             setPage(1);
           }}
-          className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+          className="input w-auto"
         >
           <option value="">All Roles</option>
-          {ROLES.map((r) => (
+          {Object.values(ROLES).map((r) => (
             <option key={r} value={r}>
               {r.charAt(0).toUpperCase() + r.slice(1)}
             </option>
@@ -102,17 +103,11 @@ export default function AdminUsers() {
       {loading ? (
         <Loading />
       ) : users.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24">
-          <div className="rounded-3xl bg-gradient-to-br from-gray-50 to-blue-50 p-8">
-            <UsersIcon className="h-16 w-16 text-gray-300" />
-          </div>
-          <h3 className="mt-6 text-lg font-bold text-gray-900">
-            No users found
-          </h3>
-          <p className="mt-2 text-sm text-gray-500">
-            Try adjusting your search or filters
-          </p>
-        </div>
+        <Empty
+          icon={UsersIcon}
+          title="No users found"
+          desc="Try adjusting your search or filters"
+        />
       ) : (
         <>
           <div className="overflow-hidden rounded-2xl border border-gray-200/60 bg-white shadow-sm">
@@ -120,21 +115,16 @@ export default function AdminUsers() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-gray-50/50">
                   <tr>
-                    <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                      User
-                    </th>
-                    <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                      Email
-                    </th>
-                    <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                      Role
-                    </th>
-                    <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                      Joined
-                    </th>
-                    <th className="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
-                      Actions
-                    </th>
+                    {["User", "Email", "Role", "Joined", "Actions"].map((h) => (
+                      <th
+                        key={h}
+                        className={`px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-gray-500 ${
+                          h === "Actions" ? "text-right" : ""
+                        }`}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -163,14 +153,14 @@ export default function AdminUsers() {
                             handleRoleChange(u._id, e.target.value)
                           }
                           className={`cursor-pointer rounded-full border-0 px-3 py-1.5 text-xs font-bold ring-1 transition-all focus:ring-2 focus:ring-blue-500 ${
-                            u.role === "admin"
+                            u.role === ROLES.ADMIN
                               ? "bg-red-50 text-red-700 ring-red-200/50"
-                              : u.role === "educator"
+                              : u.role === ROLES.EDUCATOR
                                 ? "bg-purple-50 text-purple-700 ring-purple-200/50"
                                 : "bg-emerald-50 text-emerald-700 ring-emerald-200/50"
                           }`}
                         >
-                          {ROLES.map((r) => (
+                          {Object.values(ROLES).map((r) => (
                             <option key={r} value={r}>
                               {r.charAt(0).toUpperCase() + r.slice(1)}
                             </option>

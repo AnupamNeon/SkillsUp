@@ -88,45 +88,76 @@ export const updateCourse = asyncHandler(async (req, res) => {
 
 /**
  * DELETE /api/educator/courses/:courseId
- * Delete a course (only if it has no enrolled students).
  */
 export const deleteCourse = asyncHandler(async (req, res) => {
   const { courseId } = req.params;
   const educatorId = req.userId;
 
   const course = await Course.findById(courseId);
-  if (!course) throw ApiError.notFound('Course not found');
+  if (!course) throw ApiError.notFound("Course not found");
 
-  if (course.educator !== educatorId && req.userRole !== 'admin') {
-    throw ApiError.forbidden('You can only delete your own courses');
+  if (
+    String(course.educator) !== String(educatorId) &&
+    req.userRole !== "admin"
+  ) {
+    throw ApiError.forbidden("You can only delete your own courses");
   }
 
-  if (course.enrolledStudents.length > 0) {
-    throw ApiError.badRequest(
-      'Cannot delete a course that has enrolled students'
-    );
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // 🔍 Dependency checks inside transaction
+    const [quizCount, purchaseCount, enrolledCount] = await Promise.all([
+      Quiz.countDocuments({ courseId }).session(session),
+      Purchase.countDocuments({
+        courseId,
+        status: "completed",
+      }).session(session),
+      Course.countDocuments({
+        _id: courseId,
+        enrolledStudents: { $exists: true, $not: { $size: 0 } },
+      }).session(session),
+    ]);
+
+    if (enrolledCount > 0 || quizCount > 0 || purchaseCount > 0) {
+      throw ApiError.badRequest(
+        `Cannot delete course. Found ${enrolledCount ? "students, " : ""}` +
+          `${quizCount} quizzes, ${purchaseCount} purchases. ` +
+          `Unpublish the course instead.`
+      );
+    }
+
+    // 🗑️ Delete course inside transaction
+    await Course.findByIdAndDelete(courseId).session(session);
+
+    await session.commitTransaction();
+    session.endSession();
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
   }
 
-  // Best-effort Cloudinary thumbnail cleanup
+  // ☁️ Cloudinary cleanup (outside transaction)
   if (course.courseThumbnail) {
     try {
-      const urlParts = course.courseThumbnail.split('/');
-      const folder = urlParts.at(-2);               // "courses"
-      const fileWithExt = urlParts.at(-1);           // "abc123.jpg"
-      const publicId = `lms/${folder}/${fileWithExt.replace(/\.[^/.]+$/, '')}`;
+      const urlParts = course.courseThumbnail.split("/");
+      const folder = urlParts.at(-2);
+      const fileWithExt = urlParts.at(-1);
+      const publicId = `lms/${folder}/${fileWithExt.replace(/\.[^/.]+$/, "")}`;
+
       await cloudinary.uploader.destroy(publicId);
     } catch (err) {
-      logger.warn('Failed to delete thumbnail from Cloudinary', {
+      logger.warn("Failed to delete thumbnail from Cloudinary", {
         error: err.message,
       });
     }
   }
 
-  await Course.findByIdAndDelete(courseId);
+  logger.info("Course deleted", { courseId, byUser: educatorId });
 
-  logger.info('Course deleted', { courseId, byUser: educatorId });
-
-  res.json({ success: true, message: 'Course deleted' });
+  res.json({ success: true, message: "Course deleted" });
 });
 
 /**

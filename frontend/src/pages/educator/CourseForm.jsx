@@ -2,35 +2,34 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { addCourse, updateCourse, fetchEducatorCourse } from "../../api";
+import { useSafeState } from "../../utils/hooks";
+import { uid, removeAndReindex } from "../../utils/helpers";
 import Loading from "../../components/Loading";
+import { Button } from "../../components/ui";
 import {
   Plus,
   Trash2,
   GripVertical,
   ImagePlus,
-  BookOpen,
-  FileText,
   Video,
   ArrowLeft,
 } from "lucide-react";
 
-const uid = () =>
-  Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-
-const emptyLecture = () => ({
+const emptyLecture = (order = 0) => ({
   lectureId: uid(),
   lectureTitle: "",
   lectureDuration: 0,
   lectureUrl: "",
   isPreviewFree: false,
-  lectureOrder: 0,
+  lectureOrder: order,
+  lectureDescription: "",
 });
 
-const emptyChapter = () => ({
+const emptyChapter = (order = 0) => ({
   chapterId: uid(),
-  chapterOrder: 0,
+  chapterOrder: order,
   chapterTitle: "",
-  chapterContent: [emptyLecture()],
+  chapterContent: [emptyLecture(0)],
 });
 
 export default function CourseForm() {
@@ -38,18 +37,19 @@ export default function CourseForm() {
   const isEdit = !!courseId;
   const navigate = useNavigate();
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState(0);
-  const [discount, setDiscount] = useState(0);
-  const [chapters, setChapters] = useState([emptyChapter()]);
+  const [title, setTitle] = useSafeState("");
+  const [description, setDescription] = useSafeState("");
+  const [price, setPrice] = useSafeState(0);
+  const [discount, setDiscount] = useSafeState(0);
+  const [chapters, setChapters] = useSafeState([emptyChapter(0)]);
   const [thumbnail, setThumbnail] = useState(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(isEdit);
+  const [thumbnailPreview, setThumbnailPreview] = useSafeState("");
+  const [saving, setSaving] = useSafeState(false);
+  const [loading, setLoading] = useSafeState(isEdit);
 
   useEffect(() => {
     if (!isEdit) return;
+
     fetchEducatorCourse(courseId)
       .then((r) => {
         const c = r.data.courseData;
@@ -58,27 +58,36 @@ export default function CourseForm() {
         setPrice(c.coursePrice);
         setDiscount(c.discount);
         setThumbnailPreview(c.courseThumbnail || "");
-        if (c.courseContent?.length) setChapters(c.courseContent);
+
+        if (c.courseContent?.length) {
+          const normalizedChapters = c.courseContent.map((ch) => ({
+            ...ch,
+            chapterContent: ch.chapterContent.map((lec) => ({
+              ...lec,
+              lectureDescription: lec.lectureDescription || "",
+            })),
+          }));
+          setChapters(normalizedChapters);
+        }
       })
       .catch(() => toast.error("Failed to load course"))
       .finally(() => setLoading(false));
   }, [courseId, isEdit]);
 
-  const addChapter = () =>
-    setChapters((prev) => [
-      ...prev,
-      { ...emptyChapter(), chapterOrder: prev.length },
-    ]);
+  const addChapter = () => {
+    setChapters((prev) => [...prev, emptyChapter(prev.length)]);
+  };
 
-  const removeChapter = (idx) =>
-    setChapters((prev) => prev.filter((_, i) => i !== idx));
+  const removeChapter = (idx) => {
+    setChapters((prev) => removeAndReindex(prev, idx, "chapterOrder"));
+  };
 
   const updateChapterTitle = (idx, val) =>
     setChapters((prev) =>
-      prev.map((ch, i) => (i === idx ? { ...ch, chapterTitle: val } : ch)),
+      prev.map((ch, i) => (i === idx ? { ...ch, chapterTitle: val } : ch))
     );
 
-  const addLecture = (chIdx) =>
+  const addLecture = (chIdx) => {
     setChapters((prev) =>
       prev.map((ch, i) =>
         i === chIdx
@@ -86,27 +95,30 @@ export default function CourseForm() {
               ...ch,
               chapterContent: [
                 ...ch.chapterContent,
-                {
-                  ...emptyLecture(),
-                  lectureOrder: ch.chapterContent.length,
-                },
+                emptyLecture(ch.chapterContent.length),
               ],
             }
-          : ch,
-      ),
+          : ch
+      )
     );
+  };
 
-  const removeLecture = (chIdx, lecIdx) =>
+  const removeLecture = (chIdx, lecIdx) => {
     setChapters((prev) =>
       prev.map((ch, i) =>
         i === chIdx
           ? {
               ...ch,
-              chapterContent: ch.chapterContent.filter((_, j) => j !== lecIdx),
+              chapterContent: removeAndReindex(
+                ch.chapterContent,
+                lecIdx,
+                "lectureOrder"
+              ),
             }
-          : ch,
-      ),
+          : ch
+      )
     );
+  };
 
   const updateLecture = (chIdx, lecIdx, field, val) =>
     setChapters((prev) =>
@@ -115,11 +127,11 @@ export default function CourseForm() {
           ? {
               ...ch,
               chapterContent: ch.chapterContent.map((lec, j) =>
-                j === lecIdx ? { ...lec, [field]: val } : lec,
+                j === lecIdx ? { ...lec, [field]: val } : lec
               ),
             }
-          : ch,
-      ),
+          : ch
+      )
     );
 
   const handleThumbnail = (e) => {
@@ -132,12 +144,16 @@ export default function CourseForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!title.trim() || !description.trim()) {
       return toast.error("Title and description are required");
     }
-    if (!isEdit && !thumbnail) return toast.error("Thumbnail is required");
+    if (!isEdit && !thumbnail) {
+      return toast.error("Thumbnail is required");
+    }
 
     setSaving(true);
+
     try {
       const courseData = {
         courseTitle: title.trim(),
@@ -151,6 +167,7 @@ export default function CourseForm() {
             ...lec,
             lectureOrder: li,
             lectureDuration: Number(lec.lectureDuration),
+            lectureDescription: lec.lectureDescription?.trim() || "",
           })),
         })),
       };
@@ -166,9 +183,10 @@ export default function CourseForm() {
         await addCourse(formData);
         toast.success("Course created");
       }
+
       navigate("/educator/courses");
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || "Something went wrong");
     } finally {
       setSaving(false);
     }
@@ -177,90 +195,85 @@ export default function CourseForm() {
   if (loading) return <Loading />;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
-      {/* Back button */}
-      <button
-        onClick={() => navigate("/educator/courses")}
-        className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-700"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to My Courses
-      </button>
+    <div className="max-w-5xl mx-auto px-6 py-8">
+      <form onSubmit={handleSubmit} className="space-y-10">
+        <button
+          type="button"
+          onClick={() => navigate("/educator/courses")}
+          className="mb-6 flex items-center gap-2 text-sm font-bold text-[var(--text-secondary)] transition-colors hover:text-[var(--primary)]"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to My Courses
+        </button>
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900">
-          {isEdit ? "Edit Course" : "Create New Course"}
-        </h1>
-        <p className="mt-1 text-gray-500">
-          {isEdit
-            ? "Update your course details and content"
-            : "Fill in the details to create your course"}
-        </p>
-      </div>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">
+            {isEdit ? "Edit Course" : "Create New Course"}
+          </h1>
+          <p className="text-[var(--text-secondary)]">
+            {isEdit
+              ? "Update your course details and content"
+              : "Fill in the details to create your course"}
+          </p>
+        </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Basic info */}
-        <section className="overflow-hidden rounded-2xl border border-gray-200/60 bg-white shadow-sm">
-          <div className="flex items-center gap-3 border-b border-gray-100 px-6 py-4">
-            <div className="rounded-xl bg-blue-50 p-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">
-                Basic Information
-              </h2>
-              <p className="text-xs text-gray-500">
-                Course details visible to students
-              </p>
-            </div>
+        {/* Basic Information */}
+        <section className="space-y-6">
+          <div>
+            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-1">
+              Basic Information
+            </h2>
+            <p className="text-sm text-[var(--text-secondary)]">
+              Course details visible to students
+            </p>
           </div>
 
-          <div className="space-y-5 p-6">
+          <div className="space-y-5">
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-gray-700">
-                Course Title <span className="text-red-500">*</span>
+              <label className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]">
+                Course Title <span className="text-[var(--danger)]">*</span>
               </label>
               <input
                 type="text"
-                required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+                className="input"
                 placeholder="e.g., Complete React Developer Course"
+                required
               />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-gray-700">
-                Description <span className="text-red-500">*</span>
+              <label className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]">
+                Description <span className="text-[var(--danger)]">*</span>
               </label>
               <textarea
-                required
-                rows={5}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+                rows={4}
+                className="input"
                 placeholder="Describe what students will learn…"
+                required
               />
             </div>
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-gray-700">
-                  Price ($) <span className="text-red-500">*</span>
+                <label className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]">
+                  Price ($) <span className="text-[var(--danger)]">*</span>
                 </label>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
-                  required
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+                  className="input"
+                  required
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+                <label className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]">
                   Discount (%)
                 </label>
                 <input
@@ -269,19 +282,18 @@ export default function CourseForm() {
                   max="100"
                   value={discount}
                   onChange={(e) => setDiscount(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+                  className="input"
                 />
               </div>
             </div>
 
-            {/* Thumbnail */}
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-gray-700">
-                Thumbnail {!isEdit && <span className="text-red-500">*</span>}
+              <label className="mb-1.5 block text-sm font-bold text-[var(--text-primary)]">
+                Thumbnail {!isEdit && <span className="text-[var(--danger)]">*</span>}
               </label>
               <div className="flex items-center gap-5">
                 {thumbnailPreview && (
-                  <div className="relative overflow-hidden rounded-xl shadow-md">
+                  <div className="relative overflow-hidden rounded-xl border border-[var(--border)] shadow-sm">
                     <img
                       src={thumbnailPreview}
                       alt="preview"
@@ -289,14 +301,14 @@ export default function CourseForm() {
                     />
                   </div>
                 )}
-                <label className="group flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 px-8 py-6 text-center transition-all hover:border-blue-400 hover:bg-blue-50/30">
-                  <div className="rounded-xl bg-gray-100 p-3 transition-colors group-hover:bg-blue-100">
-                    <ImagePlus className="h-6 w-6 text-gray-400 group-hover:text-blue-600" />
+                <label className="group flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--border)] px-8 py-6 text-center transition-all hover:border-[var(--primary)] hover:bg-[var(--primary-light)]">
+                  <div className="rounded-lg bg-[var(--bg)] p-3 transition-colors group-hover:bg-white">
+                    <ImagePlus className="h-6 w-6 text-[var(--text-secondary)] group-hover:text-[var(--primary)]" />
                   </div>
-                  <span className="mt-2 text-sm font-medium text-gray-600 group-hover:text-blue-600">
+                  <span className="mt-2 text-sm font-bold text-[var(--text-secondary)] group-hover:text-[var(--primary)]">
                     {thumbnail ? thumbnail.name : "Upload image"}
                   </span>
-                  <span className="mt-0.5 text-xs text-gray-400">
+                  <span className="mt-0.5 text-xs text-[var(--text-secondary)] opacity-75">
                     PNG, JPG up to 5MB
                   </span>
                   <input
@@ -311,42 +323,39 @@ export default function CourseForm() {
           </div>
         </section>
 
-        {/* Chapters & lectures */}
-        <section className="overflow-hidden rounded-2xl border border-gray-200/60 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+        {/* Course Content */}
+        <section className="card !p-0 overflow-hidden">
+          <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-6 py-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-purple-50 p-2">
-                <Video className="h-5 w-5 text-purple-600" />
+              <div className="rounded-lg bg-[var(--primary-light)] p-2">
+                <Video className="h-5 w-5 text-[var(--primary)]" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">
+                <h2 className="text-lg font-bold text-[var(--text-primary)]">
                   Course Content
                 </h2>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[var(--text-secondary)]">
                   Organize your chapters and lectures
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={addChapter}
-              className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-200"
-            >
-              <Plus className="h-4 w-4" /> Add Chapter
-            </button>
+            <Button variant="secondary" onClick={addChapter} type="button">
+              <Plus className="h-4 w-4" />
+              Add Chapter
+            </Button>
           </div>
 
-          <div className="space-y-5 p-6">
+          <div className="space-y-6 p-6 bg-[var(--bg)]">
             {chapters.map((ch, ci) => (
               <div
                 key={ch.chapterId}
-                className="rounded-2xl border border-gray-200/60 bg-gradient-to-b from-gray-50/50 to-white p-5"
+                className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"
               >
                 <div className="mb-4 flex items-center gap-3">
-                  <div className="rounded-lg bg-gray-200/50 p-1.5 text-gray-400">
+                  <div className="rounded p-1.5 text-[var(--text-secondary)] opacity-50">
                     <GripVertical className="h-4 w-4" />
                   </div>
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-xs font-bold text-white">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--primary)] text-xs font-bold text-white">
                     {ci + 1}
                   </span>
                   <input
@@ -354,13 +363,13 @@ export default function CourseForm() {
                     value={ch.chapterTitle}
                     onChange={(e) => updateChapterTitle(ci, e.target.value)}
                     placeholder={`Chapter ${ci + 1} title`}
-                    className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+                    className="input flex-1"
                   />
                   {chapters.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeChapter(ci)}
-                      className="rounded-xl border border-gray-200 p-2 text-gray-400 transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                      className="rounded-lg p-2 text-[var(--text-secondary)] transition-all hover:bg-[#FFEBEE] hover:text-[var(--danger)]"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -368,40 +377,36 @@ export default function CourseForm() {
                 </div>
 
                 {/* Lectures */}
-                <div className="ml-8 space-y-3">
+                <div className="ml-8 space-y-4">
                   {ch.chapterContent.map((lec, li) => (
                     <div
                       key={lec.lectureId}
-                      className="rounded-xl border border-gray-200/60 bg-white p-4 shadow-sm"
+                      className="rounded-lg border border-[var(--border)] bg-[var(--bg)] p-4"
                     >
                       <div className="mb-3 flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                        <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                           Lecture {li + 1}
                         </span>
                         {ch.chapterContent.length > 1 && (
                           <button
                             type="button"
                             onClick={() => removeLecture(ci, li)}
-                            className="text-gray-400 transition-colors hover:text-red-500"
+                            className="text-[var(--text-secondary)] transition-colors hover:text-[var(--danger)]"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         )}
                       </div>
+
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <input
                           type="text"
                           value={lec.lectureTitle}
                           onChange={(e) =>
-                            updateLecture(
-                              ci,
-                              li,
-                              "lectureTitle",
-                              e.target.value,
-                            )
+                            updateLecture(ci, li, "lectureTitle", e.target.value)
                           }
                           placeholder="Lecture title"
-                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+                          className="input"
                         />
                         <input
                           type="text"
@@ -410,39 +415,44 @@ export default function CourseForm() {
                             updateLecture(ci, li, "lectureUrl", e.target.value)
                           }
                           placeholder="Video URL"
-                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+                          className="input"
                         />
                         <input
                           type="number"
                           min="0"
                           value={lec.lectureDuration}
                           onChange={(e) =>
-                            updateLecture(
-                              ci,
-                              li,
-                              "lectureDuration",
-                              e.target.value,
-                            )
+                            updateLecture(ci, li, "lectureDuration", e.target.value)
                           }
                           placeholder="Duration (min)"
-                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+                          className="input"
                         />
-                        <label className="flex items-center gap-2.5 rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-600 transition-all hover:bg-gray-50">
+                        <label className="flex items-center gap-2.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-bold text-[var(--text-primary)] transition-all">
                           <input
                             type="checkbox"
                             checked={lec.isPreviewFree}
                             onChange={(e) =>
-                              updateLecture(
-                                ci,
-                                li,
-                                "isPreviewFree",
-                                e.target.checked,
-                              )
+                              updateLecture(ci, li, "isPreviewFree", e.target.checked)
                             }
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="h-4 w-4 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)]"
                           />
                           Free Preview
                         </label>
+                      </div>
+
+                      <div className="mt-4">
+                        <label className="mb-1 block text-sm font-bold text-[var(--text-primary)]">
+                          Lecture Description
+                        </label>
+                        <textarea
+                          value={lec.lectureDescription || ""}
+                          onChange={(e) =>
+                            updateLecture(ci, li, "lectureDescription", e.target.value)
+                          }
+                          placeholder="Used as fallback for AI quiz generation..."
+                          rows={2}
+                          className="input"
+                        />
                       </div>
                     </div>
                   ))}
@@ -450,9 +460,10 @@ export default function CourseForm() {
                   <button
                     type="button"
                     onClick={() => addLecture(ci)}
-                    className="flex items-center gap-1.5 rounded-xl border-2 border-dashed border-gray-200 px-4 py-2.5 text-sm font-semibold text-blue-600 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                    className="flex items-center gap-1.5 rounded-lg border-2 border-dashed border-[var(--border)] px-4 py-2 text-sm font-bold text-[var(--primary)] transition-all hover:border-[var(--primary)] hover:bg-[var(--primary-light)]"
                   >
-                    <Plus className="h-3.5 w-3.5" /> Add Lecture
+                    <Plus className="h-4 w-4" />
+                    Add Lecture
                   </button>
                 </div>
               </div>
@@ -460,22 +471,18 @@ export default function CourseForm() {
           </div>
         </section>
 
-        {/* Submit */}
-        <div className="flex justify-end gap-3">
+        {/* Submit Buttons */}
+        <div className="flex items-center justify-end gap-4 pt-6">
           <button
             type="button"
             onClick={() => navigate("/educator/courses")}
-            className="rounded-2xl border border-gray-200 px-7 py-3 text-sm font-semibold text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm"
+            className="text-sm font-bold text-[var(--text-secondary)] transition-all hover:text-[var(--text-primary)]"
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-7 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
-          >
-            {saving ? "Saving…" : isEdit ? "Update Course" : "Create Course"}
-          </button>
+          <Button type="submit" loading={saving} disabled={saving}>
+            {isEdit ? "Update Course" : "Create Course"}
+          </Button>
         </div>
       </form>
     </div>

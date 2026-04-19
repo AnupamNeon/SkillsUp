@@ -1,13 +1,14 @@
-import { Star } from 'lucide-react';
+import { Star } from "lucide-react";
 
 export default function Rating({
   value = 0,
   max = 5,
-  size = 'md',
+  size = "md",
   interactive = false,
   onChange,
 }) {
-  const px = size === 'sm' ? 'h-3.5 w-3.5' : size === 'lg' ? 'h-6 w-6' : 'h-4 w-4';
+  const px =
+    size === "sm" ? "h-3.5 w-3.5" : size === "lg" ? "h-6 w-6" : "h-4 w-4";
 
   return (
     <div className="flex items-center gap-0.5">
@@ -20,16 +21,18 @@ export default function Rating({
             disabled={!interactive}
             onClick={() => interactive && onChange?.(i + 1)}
             className={`transition-transform duration-150 ${
-              interactive ? 'cursor-pointer hover:scale-125 active:scale-95' : 'cursor-default'
+              interactive
+                ? "cursor-pointer hover:scale-125 active:scale-95"
+                : "cursor-default"
             }`}
           >
             <Star
               className={`${px} transition-colors duration-200 ${
                 filled
-                  ? 'fill-amber-400 text-amber-400 drop-shadow-sm'
+                  ? "fill-[var(--accent)] text-[var(--accent)] drop-shadow-sm" // System Accent (Orange)
                   : interactive
-                    ? 'fill-gray-200 text-gray-200 hover:fill-amber-200 hover:text-amber-200'
-                    : 'fill-gray-200 text-gray-200'
+                    ? "fill-[var(--border)] text-[var(--border)] hover:fill-[var(--accent)] hover:text-[var(--accent)]"
+                    : "fill-[var(--border)] text-[var(--border)]" // System Border (Neutral)
               }`}
             />
           </button>

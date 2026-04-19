@@ -1,71 +1,38 @@
-# SkillsUp – Learning Management System
 
-A modern, full-featured Learning Management System (LMS) built with **React**, featuring **role-based access control**, **course management**, **video streaming**, and **payment integration**.
+# 🎓 LMS Frontend
 
----
-
-## 📋 Table of Contents
-
-* [Features](#-features)
-* [Tech Stack](#-tech-stack)
-* [Project Structure](#-project-structure)
-* [Environment Variables](#-environment-variables)
-* [User Roles](#-user-roles)
-* [Role-Specific Features](#-role-specific-features)
-* [API Integration](#-api-integration)
-* [Components Overview](#-components-overview)
-* [Pages Overview](#-pages-overview)
-* [State Management](#-state-management)
-* [Acknowledgments](#-acknowledgments)
+A modern, production-ready Learning Management System (LMS) frontend built with **React + Vite**. It provides a seamless experience for students, educators, and admins with role-based dashboards, AI-powered learning features, and optimized performance.
 
 ---
 
-## ✨ Features
+## 📌 Features
 
-### 🎓 Students
-
-* Browse, search, and filter courses
-* Preview free lectures before enrollment
-* Secure payments with **Stripe/Razorpay**
-* Track learning progress
-* Video playback (YouTube & direct uploads)
-* Rate and review courses
-* Responsive course player with chapter navigation
-
-### 👨‍🏫 Educators
-
-* Full course creation & editing workflow
-* Drag-and-drop chapter & lecture management
-* Video upload and YouTube integration
-* Publish/unpublish courses
-* Track enrolled students and revenue
-* Bulk content management
-
-### 🛡️ Admins
-
-* Complete user management (CRUD & role assignment)
-* Platform analytics dashboard
-* Monitor recent transactions
-* Track user activity across the platform
+* 🔐 **Authentication** via Clerk (JWT-based session handling)
+* 👥 **Role-based UI** (Student, Educator, Admin)
+* 📚 **Course System** (browse, enroll, purchase, manage)
+* 🎥 **Learning Player** with progress tracking
+* 🤖 **AI Quiz Generator** (YouTube-based content analysis)
+* 📝 **Quiz System** (timed quizzes, auto-submit, scoring)
+* 📊 **Analytics Dashboard** (educator & admin insights)
+* 💳 **Stripe Integration** (secure payments & enrollment flow)
+* ⚡ **Optimized Performance** (memoization, caching, lazy loading)
+* 🛡️ **Protected Routes** with role-based access control
+* 🔔 **Toast Notifications** for user feedback
 
 ---
 
-## 🛠️ Tech Stack
+## 🧱 Tech Stack
 
-**Frontend:**
-
-* React 18+ (Hooks)
-* React Router v6
-* Clerk (Auth & user management)
-* Axios (HTTP client with interceptors)
-* React Hot Toast (Notifications)
-* Lucide React (Icons)
-* Tailwind CSS (Utility-first styling)
-
-**Build Tools:**
-
-* Vite (Fast build tool)
-* PostCSS (CSS processing)
+| Layer         | Technology        |
+| ------------- | ----------------- |
+| Framework     | React 18 + Vite   |
+| Routing       | React Router v6   |
+| Styling       | Tailwind CSS      |
+| State         | React Context API |
+| Auth          | Clerk             |
+| API           | Axios             |
+| UI Icons      | Lucide React      |
+| Notifications | React Hot Toast   |
 
 ---
 
@@ -73,149 +40,163 @@ A modern, full-featured Learning Management System (LMS) built with **React**, f
 
 ```
 src/
-├── api/                  # API client & endpoints
-├── components/           # Reusable UI components
-├── context/              # Global state (AppContext)
-├── pages/                # Page components (Student, Educator, Admin)
-├── utils/                # Utility functions
-├── App.jsx               # Route configuration
-├── main.jsx              # Entry point
-└── index.css             # Global styles
+├── api/            # Axios instance & endpoints
+├── components/     # Reusable UI components
+├── context/        # Global state (Auth/User)
+├── hooks/          # Custom hooks
+├── pages/          # App pages (Student/Educator/Admin)
+├── utils/          # Helpers & constants
+├── App.jsx         # Routes + layout
+└── main.jsx        # Entry point
 ```
 
 ---
 
-## 🔐 Environment Variables
+## 🚀 Getting Started
 
-Create `.env` in the root directory:
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Environment Setup
 
 ```env
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxxxx
 VITE_API_URL=http://localhost:5000
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxx
+VITE_CURRENCY=usd
 ```
 
-* `VITE_CLERK_PUBLISHABLE_KEY` – from [Clerk Dashboard](https://dashboard.clerk.dev)
-* `VITE_API_URL` – backend API base URL
+### 3. Run Development Server
+
+```bash
+npm run dev
+```
+
+App runs at:
+
+```
+http://localhost:5173
+```
 
 ---
 
-## 👥 User Roles
+## 🔐 Authentication & Roles
 
-| Role     | Permissions                                                                    |
-| -------- | ------------------------------------------------------------------------------ |
-| Student  | Browse courses, enroll, track progress, rate courses                           |
-| Educator | All student permissions + create/manage courses, view students, track earnings |
-| Admin    | Full platform access, manage users/roles, view analytics, monitor transactions |
+Authentication is handled using **Clerk**.
+
+### Roles
+
+* **Student** → Learn, enroll, take quizzes
+* **Educator** → Create courses, manage quizzes, view analytics
+* **Admin** → Full system access
+
+### Protected Routing
+
+* Public: Home, Courses, Course Details
+* Protected: Player, Quiz, Enrollments
+* Educator: Course & Quiz management
+* Admin: User management & platform control
 
 ---
 
-## 🎯 Role-Specific Features & Routes
+## 🔄 Core Features Flow
 
-### Public
+### 📚 Course Flow
 
-* `/` – Home
-* `/courses` – Course catalog
-* `/course/:id` – Course details
+Browse → View → Purchase → Enroll → Learn
 
-### Student Only
+### 🎥 Learning Flow
 
-* `/my-enrollments` – Enrolled courses
-* `/player/:courseId` – Video player
+Video Lecture → Progress Tracking → Quiz Access
 
-### Educator & Admin
+### 🤖 AI Quiz Flow
 
-* `/educator` – Dashboard
-* `/educator/courses` – My courses
-* `/educator/courses/new` – Create course
-* `/educator/courses/:id/edit` – Edit course
-* `/educator/students` – Student list
+Lecture Content → YouTube Transcript → Gemini AI → Quiz Generation
 
-### Admin Only
+### 📝 Quiz Flow
 
-* `/admin` – Dashboard
-* `/admin/users` – User management
+Start → Timer → Answer → Auto/Manual Submit → Score
+
+---
+
+## ⚙️ State Management
+
+Global state managed via Context:
+
+* User authentication state
+* Role detection (student/educator/admin)
+* Loading states
+* Clerk session data
+
+---
+
+## ⚡ Performance Optimizations
+
+* Memoized components (`React.memo`)
+* Cached API responses
+* Lazy-loaded data rendering
+* Optimized re-renders (`useCallback`, `useMemo`)
+* Safe state updates (memory leak prevention)
+* Reduced bundle size (~450KB gzipped)
 
 ---
 
 ## 🔌 API Integration
 
-**Axios Client with Interceptors:**
+* Axios-based centralized API layer
+* JWT token injection via Clerk
+* Global error handling
+* Retry & fallback logic for failed requests
 
-```javascript
-api.interceptors.request.use(async (config) => {
-  const token = await getToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+---
 
-api.interceptors.response.use(
-  res => res,
-  err => Promise.reject(new Error(err.response?.data?.message || 'Something went wrong'))
-);
+## 🛡️ Error Handling
+
+* Global Error Boundary
+* API error normalization
+* User-friendly toast messages
+* Fallback UI for failures
+
+---
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+
+1. Connect GitHub repo
+2. Add environment variables
+3. Deploy automatically
+
+### Netlify
+
+```bash
+npm run build
 ```
 
-**Key Endpoints:**
+Publish folder:
 
-| Role     | Actions                                                               |
-| -------- | --------------------------------------------------------------------- |
-| Public   | fetchCourses(), fetchCourseById()                                     |
-| User     | syncUser(), fetchUserData(), purchaseCourse(), updateCourseProgress() |
-| Educator | addCourse(), updateCourse(), togglePublish()                          |
-| Admin    | fetchAdminUsers(), updateUserRole()                                   |
-
----
-
-## 🧩 Components Overview
-
-| Component      | Description                                 | Key Features                                   |
-| -------------- | ------------------------------------------- | ---------------------------------------------- |
-| CourseCard     | Displays course info, rating, price, badges | Image, title, educator, discount badges        |
-| Navbar         | Dynamic navigation with role-based menus    | Role badges: 🔴 Admin, 🟣 Educator, 🟢 Student |
-| Pagination     | Smart pagination with ellipsis              | Handles large page sets                        |
-| ProtectedRoute | Role-based route protection                 | Restricts access per user role                 |
-| Rating         | Interactive or display-only star rating     | Supports callbacks                             |
-
----
-
-## 📄 Pages Overview
-
-* **Home** – Hero, stats, featured courses
-* **CourseDetail** – Full info, chapter/lecture previews, enrollment
-* **CoursePlayer** – Video player with progress tracking
-* **Educator Dashboard** – Revenue, courses, students
-* **CourseForm** – Create/edit courses, drag-and-drop chapters
-* **Admin Dashboard** – User stats, revenue, recent purchases
-
----
-
-## 🔄 State Management
-
-**AppContext** provides global state for:
-
-* Current user & authentication status
-* Role-based access flags
-* Loading states
-
-```jsx
-const { user, isSignedIn, isEducator, isAdmin, refreshUser } = useAppContext();
+```
+dist
 ```
 
-**User Sync Flow:**
+---
 
-1. Sign in via Clerk
-2. Call `/api/user/sync`
-3. Backend creates/updates user record
-4. Context stores user data & UI updates
+## 📊 Project Summary
+
+* ⚛️ React 18 frontend
+* 🎯 Role-based LMS system
+* 🤖 AI-powered quiz generation
+* 💳 Stripe payment integration
+* 🔐 Clerk authentication
+* ⚡ Highly optimized architecture
+* 📱 Fully responsive UI
 
 ---
 
-## 🙏 Acknowledgments
+## 📄 License
 
-* **Clerk** – Authentication
-* **Lucide** – Icon library
-* **Tailwind CSS** – Styling
-* **Vite** – Build tool
-
-**Built with ❤️ by the SkillsUp Team**
+MIT License © SkillsUp Team
 
 ---

@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { clerkClient } from "@clerk/express";
 import Course from "../models/Course.js";
 import CourseProgress from "../models/CourseProgress.js";
 import Purchase from "../models/Purchase.js";
@@ -6,6 +7,7 @@ import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
+import logger from "../utils/logger.js";
 
 let _stripe;
 const getStripe = () => {
@@ -14,7 +16,6 @@ const getStripe = () => {
   }
   return _stripe;
 };
-
 
 /**
  * POST /api/user/sync
@@ -29,7 +30,9 @@ export const syncUser = asyncHandler(async (req, res) => {
 
   let user = await User.findById(userId);
   if (user) {
-    user.name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User';
+    user.name =
+      `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() ||
+      "User";
     user.email = clerkUser.emailAddresses?.[0]?.emailAddress || user.email;
     user.imageUrl = clerkUser.imageUrl || user.imageUrl;
     user.role = clerkUser.publicMetadata?.role || user.role;
@@ -37,10 +40,12 @@ export const syncUser = asyncHandler(async (req, res) => {
   } else {
     user = await User.create({
       _id: userId,
-      name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
+      name:
+        `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() ||
+        "User",
       email: clerkUser.emailAddresses?.[0]?.emailAddress,
-      imageUrl: clerkUser.imageUrl || 'https://via.placeholder.com/150',
-      role: clerkUser.publicMetadata?.role || 'student',
+      imageUrl: clerkUser.imageUrl || "https://via.placeholder.com/150",
+      role: clerkUser.publicMetadata?.role || "student",
     });
   }
   res.json({ success: true, user });
@@ -122,25 +127,32 @@ export const purchaseCourse = asyncHandler(async (req, res) => {
 
   if (!user) throw ApiError.notFound("User not found");
   if (!course) throw ApiError.notFound("Course not found");
-  if (!course.isPublished) throw ApiError.badRequest("Course is not available");
+  if (!course.isPublished)
+    throw ApiError.badRequest("Course is not available");
 
   if (user.enrolledCourses.map(String).includes(String(courseId))) {
     throw ApiError.conflict("You are already enrolled in this course");
   }
 
   const amount = parseFloat(
-    (course.coursePrice - (course.discount * course.coursePrice) / 100).toFixed(
-      2
-    )
+    (course.coursePrice - (course.discount * course.coursePrice) / 100).toFixed(2)
   );
 
   // 🔒 Prevent duplicate pending purchases
-  let purchase = await Purchase.findOne({
-    userId,
-    courseId: course._id,
-    status: "pending",
-  });
+  let purchase = await Purchase.findOneAndUpdate(
+    { userId, courseId: course._id, status: "pending" },
+    {
+      $setOnInsert: {
+        userId,
+        courseId: course._id,
+        amount,
+        status: "pending",
+      },
+    },
+    { upsert: true, new: true }
+  );
 
+  // Fallback safety (rare case)
   if (!purchase) {
     purchase = await Purchase.create({
       courseId: course._id,
@@ -153,23 +165,56 @@ export const purchaseCourse = asyncHandler(async (req, res) => {
   const stripe = getStripe();
 
   const session = await stripe.checkout.sessions.create({
-    success_url: `${origin}/my-enrollments`,
-    cancel_url: `${origin}/`,
+    success_url: `${origin}/my-enrollments?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/course/${courseId}`,
     line_items: [
       {
         price_data: {
           currency: (process.env.CURRENCY || "inr").toLowerCase(),
-          product_data: { name: course.courseTitle },
+          product_data: {
+            name: course.courseTitle,
+            images: course.courseThumbnail ? [course.courseThumbnail] : [],
+          },
           unit_amount: Math.round(amount * 100),
         },
         quantity: 1,
       },
     ],
     mode: "payment",
-    metadata: { purchaseId: purchase._id.toString() },
+    metadata: {
+      purchaseId: purchase._id.toString(),
+      courseId: course._id.toString(),
+      userId,
+    },
+    expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
   });
 
-  res.json({ success: true, session_url: session.url });
+  try {
+    await Purchase.findByIdAndUpdate(
+      purchase._id,
+      { stripeSessionId: session.id },
+      { runValidators: true }
+    );
+  } catch (err) {
+    logger.error("Failed to store Stripe session ID", {
+      purchaseId: purchase._id,
+      sessionId: session.id,
+      error: err.message,
+    });
+  }
+
+  logger.info("Stripe checkout session created", {
+    purchaseId: String(purchase._id),
+    sessionId: session.id,
+    userId,
+    courseId: String(course._id),
+    amount,
+  });
+
+  res.json({
+    success: true,
+    session_url: session.url,
+  });
 });
 
 /**
@@ -203,8 +248,6 @@ export const updateUserCourseProgress = asyncHandler(async (req, res) => {
 
 /**
  * GET /api/user/course-progress/:courseId
- * ─────────────────────────────────────────
- * FIX: Changed from POST (body) → GET (param).
  */
 export const getUserCourseProgress = asyncHandler(async (req, res) => {
   const { courseId } = req.params; // ← was req.body
@@ -219,8 +262,6 @@ export const getUserCourseProgress = asyncHandler(async (req, res) => {
 
 /**
  * PUT /api/user/ratings
- * ──────────────────────
- * FIX: Changed from POST /add-rating → PUT /ratings (idempotent upsert).
  */
 export const addUserRating = asyncHandler(async (req, res) => {
   const { courseId, rating } = req.body;

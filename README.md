@@ -1,311 +1,409 @@
-# 📚 SkillsUp LMS — Learning Management System
 
-A full-stack Learning Management System with role-based access control (Student, Educator, Admin), Stripe payments, Clerk authentication, and a modern React frontend.
+# 🎓 SkillsUp LMS – Full Stack Learning Management System
+
+A modern, production-ready **Learning Management System (LMS)** built with **React (Frontend)** and **Node.js + Express (Backend)**. It supports students, educators, and admins in a unified ecosystem with **AI-powered quizzes, Stripe payments, role-based access control, and analytics dashboards**.
+
+---
+
+## 📌 Key Features
+
+### 👨‍🎓 Learning Platform
+
+* Course browsing, purchasing, and enrollment
+* Video-based learning with progress tracking
+* Interactive quizzes with scoring system
+* Student dashboard with attempt history
+
+### 👨‍🏫 Educator System
+
+* Create and manage courses
+* Upload lectures with descriptions
+* AI-powered quiz generation (YouTube-based)
+* View analytics (performance, students, revenue)
+
+### 🛡️ Admin Panel
+
+* User management (students, educators)
+* Platform analytics dashboard
+* Role management system
+
+### 🤖 AI Features
+
+* Quiz generation using **Google Gemini**
+* YouTube transcript extraction
+* Smart fallback (descriptions → skip logic)
+* Content validation before generation
+
+### 💳 Payments
+
+* Stripe checkout integration
+* Webhook-based enrollment fulfillment
+* Idempotent payment handling
+
+### 🔐 Authentication
+
+* Clerk-based authentication
+* JWT session management
+* Role-based access control (RBAC)
 
 ---
 
 ## 🏗️ Tech Stack
 
-| Layer      | Technology                                                     |
-| ---------- | -------------------------------------------------------------- |
-| Frontend   | React 18, Vite, Tailwind CSS, React Router, Clerk, Axios       |
-| Backend    | Node.js, Express, MongoDB, Mongoose                            |
-| Auth       | Clerk (JWT + Webhooks)                                         |
-| Payments   | Stripe Checkout                                                |
-| Storage    | Cloudinary (course thumbnails)                                 |
-| Logging    | Winston + Morgan                                               |
-| Docs       | Swagger / OpenAPI 3.0 (dev only)                               |
+### Frontend
+
+* React 18 + Vite
+* Tailwind CSS
+* React Router v6
+* Axios
+* Clerk Auth
+* React Hot Toast
+
+### Backend
+
+* Node.js + Express
+* MongoDB + Mongoose
+* Stripe API
+* Google Gemini AI
+* Cloudinary (file uploads)
+* Clerk Webhooks
+* YouTube transcript API
+* Winston (logging)
 
 ---
 
 ## 📁 Project Structure
 
+### 🔹 Backend
+
+```id="backend-structure"
+backend/
+├── app.js
+├── server.js
+├── config/
+├── controllers/
+├── middleware/
+├── models/
+├── routes/
+├── utils/
+└── validators/
 ```
-├── client/                    # React frontend
-│   ├── src/
-│   │   ├── api/               # Axios API client
-│   │   ├── components/        # Reusable UI components
-│   │   ├── context/           # React Context (auth, user state)
-│   │   ├── pages/             # Route pages
-│   │   │   ├── admin/         # Admin dashboard & user management
-│   │   │   └── educator/      # Educator dashboard, course CRUD
-│   │   └── utils/             # Helpers (currency formatting, etc.)
-│   └── .env                   # VITE_CLERK_PUBLISHABLE_KEY, VITE_API_URL
-│
-├── server/                    # Express backend
-│   ├── src/
-│   │   ├── config/            # DB, Cloudinary, Multer, Swagger, Env
-│   │   ├── controllers/       # Route handlers
-│   │   ├── middleware/         # Auth, error handling, rate limiting
-│   │   ├── models/            # Mongoose schemas
-│   │   ├── routes/            # Express routers
-│   │   ├── utils/             # ApiError, logger, pagination, roles
-│   │   └── validators/        # express-validator rules
-│   └── .env                   # See Environment Variables below
+
+### 🔹 Frontend
+
+```id="frontend-structure"
+frontend/
+├── src/
+│   ├── api/
+│   ├── components/
+│   ├── context/
+│   ├── hooks/
+│   ├── pages/
+│   ├── utils/
+│   ├── App.jsx
+│   └── main.jsx
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Getting Started
 
-### Prerequisites
+## 1️⃣ Clone Repository
 
-- Node.js ≥ 18
-- MongoDB (local or Atlas)
-- Clerk account → [clerk.com](https://clerk.com)
-- Stripe account → [stripe.com](https://stripe.com)
-- Cloudinary account → [cloudinary.com](https://cloudinary.com)
+```bash id="clone"
+git clone https://github.com/AnupamNeon/SkiilsUp.git
+cd SkillsUp
+```
 
-### 1. Clone & Install
+---
 
-```bash
-git clone https://github.com/your-username/skillsup-lms.git
-cd skillsup-lms
+## 2️⃣ Backend Setup
 
-# Backend
-cd server
-npm install
-
-# Frontend
-cd ../client
+```bash 
+cd backend
 npm install
 ```
 
-### 2. Environment Variables
+### Environment Variables
 
-**Backend** (`server/.env`)
-
-```env
-# Required
-MONGODB_URI=mongodb+srv://...
-CLOUDINARY_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_SECRET_KEY=your_secret
-CLERK_WEBHOOK_SECRET=whsec_...
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-
-# Optional
-NODE_ENV=development
+```env 
 PORT=5000
-CURRENCY=inr
-CORS_ORIGIN=http://localhost:5173
-ADMIN_CLERK_USER_IDS=user_abc123,user_def456
+MONGODB_URI=your_mongo_url
+CLERK_WEBHOOK_SECRET=your_secret
+STRIPE_SECRET_KEY=your_key
+STRIPE_WEBHOOK_SECRET=your_secret
+CLOUDINARY_NAME=your_cloud
+CLOUDINARY_API_KEY=your_key
+CLOUDINARY_SECRET_KEY=your_secret
+GEMINI_API_KEY=your_key
+FRONTEND_URL=http://localhost:5173
 ```
 
-**Frontend** (`client/.env`)
+### Run Backend
 
-```env
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
-VITE_API_URL=http://localhost:5000
-```
-
-### 3. Run
-
-```bash
-# Terminal 1 — Backend
-cd server
-npm run dev
-
-# Terminal 2 — Frontend
-cd client
+```bash id="backend-run"
 npm run dev
 ```
-
-- **Frontend** → `http://localhost:5173`
-- **Backend** → `http://localhost:5000`
-- **API Docs** → `http://localhost:5000/api-docs` (dev only)
 
 ---
 
-## 👥 Roles & Permissions
+## 3️⃣ Frontend Setup
 
-| Feature                  | Student | Educator | Admin |
-| ------------------------ | :-----: | :------: | :---: |
-| Browse & search courses  |   ✅    |    ✅    |  ✅   |
-| Purchase / enroll        |   ✅    |    —     |   —   |
-| Watch course content     |   ✅    |    —     |   —   |
-| Track progress & rate    |   ✅    |    —     |   —   |
-| Create / edit courses    |    —    |    ✅    |  ✅   |
-| View enrolled students   |    —    |    ✅    |  ✅   |
-| Educator dashboard       |    —    |    ✅    |  ✅   |
-| Manage users & roles     |    —    |    —     |  ✅   |
-| Platform-wide dashboard  |    —    |    —     |  ✅   |
-| Delete users             |    —    |    —     |  ✅   |
+```bash id="frontend-install"
+cd frontend
+npm install
+```
 
-> **Bootstrap Admin:** Add your Clerk user ID to `ADMIN_CLERK_USER_IDS` in `.env` to grant yourself admin access without DB changes.
+### Environment Variables
+
+```env id="frontend-env"
+VITE_API_URL=http://localhost:5000
+VITE_CLERK_PUBLISHABLE_KEY=your_key
+VITE_CURRENCY=usd
+```
+
+### Run Frontend
+
+```bash id="frontend-run"
+npm run dev
+```
+
+---
+
+## 🌐 Application Flow
+
+```
+User (Frontend)
+   ↓
+React App (Vite)
+   ↓
+Axios API Calls
+   ↓
+Express Backend
+   ↓
+MongoDB Database
+   ↓
+External Services:
+   - Stripe (Payments)
+   - Clerk (Auth)
+   - Gemini AI (Quiz)
+   - Cloudinary (Media)
+```
+
+---
+
+## 🔐 Authentication & Roles
+
+Authentication is handled by **Clerk**.
+
+### Roles
+
+| Role     | Permissions                    |
+| -------- | ------------------------------ |
+| Student  | Enroll, learn, take quizzes    |
+| Educator | Create courses, manage quizzes |
+| Admin    | Full system control            |
+
+### Flow
+
+```
+Login (Clerk)
+   ↓
+JWT Token
+   ↓
+Backend Validation
+   ↓
+Role Assignment
+   ↓
+Protected Routes
+```
+
+---
+
+## 📚 Core Modules
+
+### 🎓 Course System
+
+* Course listing with filters
+* Course details page
+* Enrollment system
+* Progress tracking
+
+### 🎥 Learning System
+
+* Lecture-based video player
+* Chapter navigation
+* Completion tracking
+
+### 📝 Quiz System
+
+* AI-generated quizzes
+* Manual quiz creation
+* Timed assessments
+* Auto scoring
+
+### 📊 Analytics
+
+* Educator performance dashboard
+* Student attempt history
+* Platform-wide admin stats
+
+---
+
+## 🤖 AI Quiz Generation
+
+### Process
+
+```
+Lecture Content
+   ↓
+YouTube Transcript Fetch
+   ↓
+Gemini AI Processing
+   ↓
+Quiz Generation
+```
+
+### Fallback Strategy
+
+1. YouTube transcript
+2. Lecture description
+3. Skip generation
+
+---
+
+## 💳 Payment System
+
+### Stripe Flow
+
+```
+User clicks "Buy Course"
+   ↓
+Stripe Checkout Session
+   ↓
+Payment Success
+   ↓
+Stripe Webhook
+   ↓
+Enrollment Created
+```
+
+### Safety
+
+* Idempotent webhook handling
+* Transaction-safe enrollment
+* Duplicate payment protection
+
+---
+
+## ⚡ Performance Optimizations
+
+### Frontend
+
+* Memoized components
+* Lazy loading
+* API caching
+* Optimized re-renders
+* Safe state updates
+
+### Backend
+
+* Pagination everywhere
+* Rate limiting
+* Structured logging
+* Optimized database queries
+
+---
+
+## 🛡️ Security Features
+
+* JWT authentication via Clerk
+* Role-based route protection
+* Rate limiting (API abuse prevention)
+* Helmet security headers
+* Input validation (express-validator)
+* Webhook signature verification
 
 ---
 
 ## 🔌 API Overview
 
-| Method   | Endpoint                                  | Auth     | Description                   |
-| -------- | ----------------------------------------- | -------- | ----------------------------- |
-| `GET`    | `/api/course/all`                         | Public   | List published courses        |
-| `GET`    | `/api/course/:id`                         | Public   | Course detail (URLs stripped) |
-| `POST`   | `/api/user/sync`                          | Required | Sync Clerk user to DB         |
-| `GET`    | `/api/user/data`                          | Required | Get current user              |
-| `GET`    | `/api/user/enrolled-courses`              | Required | User's enrollments            |
-| `GET`    | `/api/user/enrolled-courses/:id/content`  | Required | Full course content (enrolled)|
-| `POST`   | `/api/user/purchase`                      | Required | Start Stripe checkout         |
-| `POST`   | `/api/user/update-course-progress`        | Required | Mark lecture complete          |
-| `GET`    | `/api/user/course-progress/:courseId`      | Required | Get progress                  |
-| `PUT`    | `/api/user/ratings`                       | Required | Rate a course                 |
-| `POST`   | `/api/educator/add-course`                | Educator | Create course                 |
-| `PUT`    | `/api/educator/courses/:id`               | Educator | Update course                 |
-| `DELETE` | `/api/educator/courses/:id`               | Educator | Delete course                 |
-| `PATCH`  | `/api/educator/courses/:id/publish`       | Educator | Toggle publish                |
-| `GET`    | `/api/educator/dashboard`                 | Educator | Educator stats                |
-| `GET`    | `/api/admin/dashboard`                    | Admin    | Platform stats                |
-| `GET`    | `/api/admin/users`                        | Admin    | List users                    |
-| `PUT`    | `/api/admin/users/:id/role`               | Admin    | Change user role              |
-| `DELETE` | `/api/admin/users/:id`                    | Admin    | Delete user                   |
-| `POST`   | `/webhooks/clerk`                         | Webhook  | Clerk events                  |
-| `POST`   | `/webhooks/stripe`                        | Webhook  | Stripe events                 |
+### Base URL
 
-Full Swagger docs available at `/api-docs` in development.
+```
+http://localhost:5000/api
+```
+
+### Main Routes
+
+| Module    | Endpoint        |
+| --------- | --------------- |
+| Auth/User | `/api/user`     |
+| Courses   | `/api/course`   |
+| Educator  | `/api/educator` |
+| Quiz      | `/api/quiz`     |
+| Admin     | `/api/admin`    |
 
 ---
 
-## 💳 Payment Flow
-
-```
-Student clicks "Enroll Now"
-        │
-        ▼
-  POST /api/user/purchase
-        │
-        ├── Free course → Instant enrollment (DB transaction)
-        │
-        └── Paid course → Stripe Checkout session created
-                │
-                ▼
-        Redirect to Stripe hosted page
-                │
-                ▼
-        Payment completes → Stripe webhook fires
-                │
-                ▼
-        POST /webhooks/stripe (checkout.session.completed)
-                │
-                ▼
-        DB transaction: enroll student + mark purchase complete
-                │
-                ▼
-        Redirect to /my-enrollments
-```
-
----
-
-## 🔒 Security Features
-
-- **Clerk JWT authentication** with middleware validation
-- **Role-based authorization** (student / educator / admin)
-- **Helmet** security headers
-- **CORS** with origin whitelist
-- **Rate limiting** (global + per-endpoint)
-- **Input validation** via `express-validator`
-- **MongoDB transactions** for purchase atomicity
-- **Webhook signature verification** (Clerk + Stripe)
-- **File upload restrictions** (5MB, images only)
-- **Request body size limit** (10KB)
-
----
-
-## 🛠️ Webhook Setup
-
-### Clerk Webhook
-
-1. Go to **Clerk Dashboard → Webhooks**
-2. Add endpoint: `https://your-domain.com/webhooks/clerk`
-3. Subscribe to: `user.created`, `user.updated`, `user.deleted`
-4. Copy signing secret → `CLERK_WEBHOOK_SECRET`
-
-### Stripe Webhook
-
-1. Go to **Stripe Dashboard → Developers → Webhooks**
-2. Add endpoint: `https://your-domain.com/webhooks/stripe`
-3. Subscribe to: `checkout.session.completed`, `payment_intent.payment_failed`
-4. Copy signing secret → `STRIPE_WEBHOOK_SECRET`
-
-**Local testing:**
-
-```bash
-# Stripe CLI
-stripe listen --forward-to localhost:5000/webhooks/stripe
-
-# ngrok (for Clerk)
-ngrok http 5000
-```
-
----
-
-## 📝 Available Scripts
-
-### Backend
-
-```bash
-npm run dev          # Start with nodemon (development)
-npm start            # Start production server
-```
+## 🚀 Deployment
 
 ### Frontend
 
-```bash
-npm run dev          # Vite dev server
-npm run build        # Production build
-npm run preview      # Preview production build
-```
+* Vercel / Netlify
+
+### Backend
+
+* Render / AWS / Railway
+
+### Database
+
+* MongoDB Atlas
 
 ---
 
-## 🗄️ Database Models
+## 📊 Project Stats
 
-```
-User
-├── _id (Clerk user ID — String)
-├── name, email, imageUrl
-├── role (student | educator | admin)
-└── enrolledCourses[] → Course
-
-Course
-├── courseTitle, courseDescription, courseThumbnail
-├── coursePrice, discount, isPublished
-├── educator → User
-├── enrolledStudents[] → User
-├── courseRatings[] { userId, rating }
-└── courseContent[]
-    └── Chapter { chapterTitle, chapterOrder }
-        └── Lecture { lectureTitle, lectureUrl, lectureDuration, isPreviewFree }
-
-Purchase
-├── courseId → Course
-├── userId → User
-├── amount
-└── status (pending | completed | failed)
-
-CourseProgress
-├── userId → User
-├── courseId → Course
-└── lectureCompleted[] (lecture IDs)
-```
+* 🧩 40+ API endpoints
+* 📚 20+ React pages
+* 🧠 AI-powered quiz system
+* 💳 Fully integrated Stripe payments
+* 🔐 Secure authentication system
+* ⚡ Optimized for production
 
 ---
 
-## ⚠️ Known Limitations
+## 🧑‍💻 Contributing
 
-- In-memory rate limiter (won't scale across multiple instances — use Redis store for production)
-- No real-time notifications (WebSocket/SSE)
-- No video upload — lectures use external URLs (YouTube, etc.)
-- No certificate generation
-- No refund flow
+```bash id="contrib"
+git checkout -b feature-name
+git commit -m "feat: add feature"
+git push origin feature-name
+```
+
+### Guidelines
+
+* Follow clean architecture
+* Use reusable components
+* Avoid hardcoded values
+* Handle errors properly
 
 ---
 
 ## 📄 License
 
-MIT
+MIT License © SkillsUp Team
 
 ---
 
-**Built with ❤️ for learners everywhere.**
+## 🎯 Summary
+
+SkillsUp LMS is a **full-stack, scalable education platform** combining:
+
+* Modern frontend (React)
+* Robust backend (Node + Express)
+* AI-powered learning
+* Secure payments
+* Role-based architecture
+
+---

@@ -1,549 +1,394 @@
-# 📚 Role-LMS Backend
+# LMS Backend API
 
-A production-ready **Learning Management System (LMS)** REST API built with **Express.js**, **MongoDB**, **Clerk** authentication, and **Stripe** payments. Features full **Role-Based Access Control (RBAC)**, search, pagination, structured logging, and comprehensive security hardening.
-
----
-
-## 📑 Table of Contents
-
-- [Features](#-features)
-- [Architecture](#-architecture)
-- [Tech Stack](#-tech-stack)
-- [Prerequisites](#-prerequisites)
-- [Environment Variables](#-environment-variables)
-- [Project Structure](#-project-structure)
-- [API Documentation](#-api-documentation)
-- [Role-Based Access Control](#-role-based-access-control)
-- [Search & Filtering](#-search--filtering)
-- [Pagination](#-pagination)
-- [Error Handling](#-error-handling)
-- [Rate Limiting](#-rate-limiting)
-- [Logging](#-logging)
-- [Security](#-security)
-- [Webhooks](#-webhooks)
-- [License](#-license)
+A robust, production-ready Learning Management System (LMS) REST API built with Node.js and Express. Features AI-powered quiz generation, Stripe payments, Clerk authentication, and role-based access control.
 
 ---
 
-## ✨ Features
+## Table of Contents
 
-| Category | Details |
-|----------|---------|
-| **Authentication** | Clerk-based auth with JWT verification |
-| **Authorization** | 3-tier RBAC — Admin, Educator, Student |
-| **Courses** | CRUD with thumbnail upload (Cloudinary) |
-| **Payments** | Stripe Checkout integration with webhook processing |
-| **Search** | Regex-based search on course titles & descriptions |
-| **Filtering** | Price range, educator, role-based filters |
-| **Pagination** | Consistent cursor across all list endpoints |
-| **Security** | Helmet, CORS, mongo sanitization, HPP, rate limiting |
-| **Logging** | Structured Winston logging with file rotation |
-| **Error Handling** | Centralized with standardized response format |
-| **API Docs** | Auto-generated Swagger/OpenAPI documentation |
-| **Env Validation** | Startup validation of all required configuration |
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [API Reference](#api-reference)
+- [Authentication & Roles](#authentication--roles)
+- [Webhooks](#webhooks)
+- [Error Handling](#error-handling)
+- [Rate Limiting](#rate-limiting)
 
 ---
 
-## 🏗 Architecture
+## Features
 
-```
-Client (React/Next.js)
-    │
-    ▼
-┌──────────────────────────────────────────────────────┐
-│                    Express Server                    │
-│                                                      │
-│  ┌─────────┐  ┌──────────┐  ┌──────────────────────┐ │
-│  │ Helmet  │  │   CORS   │  │   Rate Limiter       │ │
-│  └────┬────┘  └────┬─────┘  └──────────┬───────────┘ │
-│       ▼            ▼                    ▼            │
-│  ┌──────────────────────────────────────────────────┐│
-│  │              Clerk Middleware                    ││
-│  └──────────────────┬───────────────────────────────┘│
-│                     ▼                                │
-│  ┌──────────────────────────────────────────────────┐│
-│  │                 API Routes                       ││
-│  │  /api/course  /api/user  /api/educator /api/admin│
-│  └──────────────────┬───────────────────────────────┘│
-│                     ▼                                │
-│  ┌──────────┐  ┌──────────┐  ┌───────────┐           │
-│  │Validators│→ │  Auth    │→ │Controllers│           │
-│  └──────────┘  │Middleware│  └─────┬─────┘           │
-│                └──────────┘        ▼                 │
-│                            ┌──────────────┐          │
-│                            │   Models     │          │
-│                            │  (Mongoose)  │          │
-│                            └──────┬───────┘          │
-│                                   ▼                  │
-│                            ┌──────────────┐          │
-│                            │   MongoDB    │          │
-│                            └──────────────┘          │
-│                                                      │
-│  ┌──────────────────────────────────────────────────┐│
-│  │           Global Error Handler                   ││
-│  └──────────────────────────────────────────────────┘│
-└──────────────────────────────────────────────────────┘
-         │                          │
-         ▼                          ▼
-   ┌───────────┐            ┌──────────────┐
-   │ Cloudinary│            │    Stripe    │
-   └───────────┘            └──────────────┘
-```
+- 🔐 **Authentication** via [Clerk](https://clerk.com) with webhook sync
+- 👥 **Role-based access control** — Student, Educator, Admin
+- 🎓 **Course management** — create, update, publish/unpublish, delete
+- 🛒 **Stripe payments** — checkout sessions, webhook fulfillment, idempotent enrollment
+- 🤖 **AI quiz generation** — powered by Google Gemini, using YouTube transcripts
+- 📊 **Analytics dashboards** — per educator and platform-wide admin view
+- 📁 **Image uploads** — Cloudinary integration via Multer
+- 📈 **Pagination** — standardised across all list endpoints
+- 🛡️ **Security** — Helmet, CORS, rate limiting, input validation
+- 🪵 **Structured logging** — Winston with environment-aware formatting
+- ♻️ **Idempotent webhooks** — safe Stripe retry handling
+- 🔁 **Transaction support** — auto-detects MongoDB replica set capability
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Runtime | Node.js (≥ 18) |
-| Framework | Express.js 4.x |
-| Database | MongoDB with Mongoose ODM |
+|---|---|
+| Runtime | Node.js (ESM) |
+| Framework | Express.js |
+| Database | MongoDB + Mongoose |
 | Authentication | Clerk |
 | Payments | Stripe |
+| AI | Google Gemini (`gemini-2.5-flash`) |
 | File Storage | Cloudinary |
-| Logging | Winston + Morgan |
+| File Upload | Multer |
 | Validation | express-validator |
-| Documentation | Swagger (OpenAPI 3.0) |
-| Security | helmet, cors, express-mongo-sanitize, hpp, express-rate-limit |
+| Logging | Winston + Morgan |
+| Rate Limiting | express-rate-limit |
+| YouTube | youtubei.js |
 
 ---
 
-## 📋 Prerequisites
+## Project Structure
 
-- **Node.js** ≥ 18.0.0
-- **npm** ≥ 9.0.0
-- **MongoDB** (Atlas or local instance)
-- **Clerk** account with API keys
-- **Stripe** account with API keys
-- **Cloudinary** account with API keys
+```
+├── app.js                    # Express app setup
+├── server.js                 # Entry point
+├── config/
+│   ├── ai.js                 # Gemini AI client
+│   ├── cloudinary.js         # Cloudinary configuration
+│   ├── database.js           # MongoDB connection
+│   ├── env.js                # Environment validation & defaults
+│   └── multer.js             # File upload configuration
+├── controllers/
+│   ├── admin.controller.js   # Admin operations
+│   ├── course.controller.js  # Public course browsing
+│   ├── educator.controller.js# Educator course management
+│   ├── quiz.controller.js    # Quiz generation & attempts
+│   ├── user.controller.js    # User data & purchases
+│   └── webhook.controller.js # Clerk & Stripe webhooks
+├── middleware/
+│   ├── auth.js               # authenticate / authorize guards
+│   ├── errorHandler.js       # Global error handler
+│   ├── rateLimiter.js        # Rate limit presets
+│   ├── requestLogger.js      # Morgan HTTP logging
+│   └── validate.js           # express-validator runner
+├── models/
+│   ├── Course.js
+│   ├── CourseProgress.js
+│   ├── Purchase.js
+│   ├── Quiz.js
+│   ├── QuizAttempt.js
+│   └── User.js
+├── routes/
+│   ├── index.js              # Route aggregator
+│   ├── admin.routes.js
+│   ├── course.routes.js
+│   ├── educator.routes.js
+│   ├── quiz.routes.js
+│   ├── user.routes.js
+│   └── webhook.routes.js
+├── utils/
+│   ├── ApiError.js           # Standardised error class
+│   ├── asyncHandler.js       # Async route wrapper
+│   ├── logger.js             # Winston logger
+│   ├── pagination.js         # Pagination helpers
+│   ├── roles.js              # Role constants
+│   └── youtubeService.js     # Transcript fetching + caching
+└── validators/
+    ├── admin.validator.js
+    ├── course.validator.js
+    ├── educator.validator.js
+    ├── quiz.validator.js
+    └── user.validator.js
+```
 
 ---
 
-## 🔐 Environment Variables
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- MongoDB (replica set recommended for transactions)
+- Clerk account
+- Stripe account
+- Cloudinary account
+- Google AI Studio API key (Gemini)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/AnupamNeon/SkiilsUp.git
+cd backend
+
+# Install dependencies
+npm install
+
+# Copy environment file
+cp .env
+# Fill in your values (see Environment Variables section)
+
+# Start development server
+npm run dev
+
+# Start production server
+npm start
+```
+
+---
+
+## Environment Variables
 
 | Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `NODE_ENV` | No | `development` | `development`, `production`, or `test` |
-| `PORT` | No | `5000` | Server port |
-| `MONGODB_URI` | **Yes** | — | MongoDB connection string |
-| `CLERK_WEBHOOK_SECRET` | **Yes** | — | Clerk webhook signing secret |
-| `CLOUDINARY_NAME` | **Yes** | — | Cloudinary cloud name |
-| `CLOUDINARY_API_KEY` | **Yes** | — | Cloudinary API key |
-| `CLOUDINARY_SECRET_KEY` | **Yes** | — | Cloudinary API secret |
-| `STRIPE_SECRET_KEY` | **Yes** | — | Stripe secret key |
-| `STRIPE_WEBHOOK_SECRET` | **Yes** | — | Stripe webhook signing secret |
-| `CURRENCY` | No | `inr` | Payment currency code |
-| `CORS_ORIGIN` | No | `*` | Allowed origins (comma-separated) |
-| `ADMIN_CLERK_USER_IDS` | No | — | Bootstrap admin Clerk user IDs (comma-separated) |
-| `RATE_LIMIT_WINDOW_MS` | No | `900000` | Rate limit window in ms (15 min) |
-| `RATE_LIMIT_MAX` | No | `100` | Max requests per window |
+|---|---|---|---|
+| `MONGODB_URI` | ✅ | — | MongoDB connection string |
+| `CLERK_WEBHOOK_SECRET` | ✅ | — | Clerk webhook signing secret |
+| `STRIPE_SECRET_KEY` | ✅ | — | Stripe secret key |
+| `STRIPE_WEBHOOK_SECRET` | ✅ | — | Stripe webhook signing secret |
+| `CLOUDINARY_NAME` | ✅ | — | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | ✅ | — | Cloudinary API key |
+| `CLOUDINARY_SECRET_KEY` | ✅ | — | Cloudinary API secret |
+| `GEMINI_API_KEY` | ⚠️ | — | Required for AI quiz generation |
+| `AI_PROVIDER` | ❌ | `gemini` | AI provider selection |
+| `NODE_ENV` | ❌ | `development` | `development`, `production`, or `test` |
+| `PORT` | ❌ | `5000` | Server port |
+| `CORS_ORIGIN` | ❌ | `*` | Comma-separated allowed origins |
+| `CURRENCY` | ❌ | `inr` | Stripe currency code (supports aliases: `Rs`→`inr`, `$`→`usd`) |
+| `ADMIN_CLERK_USER_IDS` | ❌ | — | Comma-separated bootstrap admin Clerk IDs |
+| `RATE_LIMIT_WINDOW_MS` | ❌ | `900000` | Rate limit window in ms (15 min) |
+| `RATE_LIMIT_MAX` | ❌ | `100` | Max requests per window |
+| `MONGODB_URI` | ✅ | - | Database mongoDb connection string |
+| `FRONTEND_URL` | ❌ | — | Used as fallback in Stripe redirects |
 
 ---
 
-## 📁 Project Structure
+## API Reference
+
+### Base URL
 
 ```
-backend/
-├── logs/                          # Generated log files (gitignored)
-│   ├── error.log
-│   └── combined.log
-├── src/
-│   ├── config/
-│   │   ├── cloudinary.js          # Cloudinary SDK setup
-│   │   ├── database.js            # MongoDB/Mongoose connection
-│   │   ├── env.js                 # Environment validation
-│   │   ├── multer.js              # File upload config
-│   │   └── swagger.js             # OpenAPI spec generation
-│   ├── constants/
-│   │   └── roles.js               # RBAC role constants
-│   ├── controllers/
-│   │   ├── admin.controller.js    # Admin user management
-│   │   ├── course.controller.js   # Public course endpoints
-│   │   ├── educator.controller.js # Educator course management
-│   │   ├── user.controller.js     # Student endpoints
-│   │   └── webhook.controller.js  # Clerk & Stripe webhooks
-│   ├── middleware/
-│   │   ├── auth.js                # authenticate() & authorize()
-│   │   ├── errorHandler.js        # Global error handler + 404
-│   │   ├── rateLimiter.js         # Rate limiting configs
-│   │   ├── requestLogger.js       # Morgan → Winston bridge
-│   │   └── validate.js            # express-validator runner
-│   ├── models/
-│   │   ├── Course.js              # Course + Chapter + Lecture schemas
-│   │   ├── CourseProgress.js      # Per-user progress tracking
-│   │   ├── Purchase.js            # Payment records
-│   │   └── User.js                # User with role field
-│   ├── routes/
-│   │   ├── admin.routes.js        # /api/admin/*
-│   │   ├── course.routes.js       # /api/course/*
-│   │   ├── educator.routes.js     # /api/educator/*
-│   │   ├── index.js               # Route aggregator
-│   │   ├── user.routes.js         # /api/user/*
-│   │   └── webhook.routes.js      # /webhooks/*
-│   ├── utils/
-│   │   ├── ApiError.js            # Custom error class
-│   │   ├── asyncHandler.js        # Async try-catch wrapper
-│   │   ├── logger.js              # Winston logger instance
-│   │   ├── roles.js               # RBAC role constants
-│   │   └── pagination.js          # Pagination helpers 
-│   ├── validators/
-│   │   ├── admin.validator.js     # Admin input validation
-│   │   ├── course.validator.js    # Course query/param validation
-│   │   ├── educator.validator.js  # Course creation validation
-│   │   └── user.validator.js      # User action validation
-│   └── app.js                     # Express app configuration
-├── .env                           # Environment template
-├── .gitignore
-├── package.json
-├── README.md
-└── server.js                      # Entry point
+http://localhost:5000/api
+```
+
+### Health Check
+
+```
+GET /health           # Basic server health
+GET /api/health       # Database-aware health check
 ```
 
 ---
 
-## 📖 API Documentation
-
-### Interactive Docs
-
-When running in development mode, Swagger UI is available at:
-
-```
-http://localhost:5000/api-docs
-```
-
-### Endpoint Overview
-
-#### Public Endpoints
+### Public Course Routes `/api/course`
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/` | API status |
-| `GET` | `/health` | Health check |
-| `GET` | `/api/course/all` | List published courses |
-| `GET` | `/api/course/:id` | Get course details |
+|---|---|---|
+| `GET` | `/all` | List published courses (search, filter, sort, paginate) |
+| `GET` | `/:id` | Get course detail (paid lecture URLs stripped) |
 
-#### Webhook Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/webhooks/clerk` | Clerk user events |
-| `POST` | `/webhooks/stripe` | Stripe payment events |
+### User Routes `/api/user`
 
-#### Student Endpoints (Authenticated)
+> All routes require authentication (Clerk JWT).
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/user/data` | Get profile |
-| `GET` | `/api/user/enrolled-courses` | List enrolled courses |
-| `POST` | `/api/user/purchase` | Purchase a course |
-| `POST` | `/api/user/update-course-progress` | Mark lecture complete |
-| `POST` | `/api/user/get-course-progress` | Get progress for course |
-| `POST` | `/api/user/add-rating` | Rate a course |
+|---|---|---|
+| `POST` | `/sync` | Sync Clerk user to MongoDB |
+| `GET` | `/data` | Get current user profile |
+| `GET` | `/enrolled-courses` | List enrolled courses |
+| `GET` | `/enrolled-courses/:courseId/content` | Full course content (enrolled only) |
+| `POST` | `/purchase` | Create Stripe checkout session |
+| `POST` | `/update-course-progress` | Mark a lecture as completed |
+| `GET` | `/course-progress/:courseId` | Get progress for a course |
+| `PUT` | `/ratings` | Add or update a course rating (1–5) |
 
-#### Educator Endpoints (Educator/Admin role)
+### Educator Routes `/api/educator`
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/educator/add-course` | Create course |
-| `GET` | `/api/educator/courses` | List own courses |
-| `GET` | `/api/educator/dashboard` | Educator analytics |
-| `GET` | `/api/educator/enrolled-students` | List enrolled students |
-
-#### Admin Endpoints (Admin role only)
+> Requires Educator or Admin role.
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/admin/dashboard` | Platform analytics |
-| `GET` | `/api/admin/users` | List all users |
-| `GET` | `/api/admin/educators` | List educators |
-| `PUT` | `/api/admin/users/:userId/role` | Update user role |
-| `DELETE` | `/api/admin/users/:userId` | Delete user |
+|---|---|---|
+| `POST` | `/add-course` | Create a course (multipart/form-data) |
+| `GET` | `/courses` | List educator's own courses |
+| `GET` | `/courses/:courseId` | Get single course (owner only) |
+| `PUT` | `/courses/:courseId` | Update course (multipart/form-data) |
+| `DELETE` | `/courses/:courseId` | Delete course (no enrolled students) |
+| `PATCH` | `/courses/:courseId/publish` | Toggle publish state |
+| `PUT` | `/courses/:courseId/lecture-descriptions` | Bulk update lecture descriptions |
+| `GET` | `/dashboard` | Earnings, courses, student data |
+| `GET` | `/enrolled-students` | Paginated enrolled student list |
+
+### Quiz Routes `/api/quiz`
+
+#### Educator-only
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/check-content` | Check if AI quiz can be generated for a chapter |
+| `POST` | `/generate` | Generate AI quiz from YouTube transcript |
+| `POST` | `/manual` | Create a manually written quiz |
+| `PUT` | `/:quizId` | Update quiz settings or questions |
+| `DELETE` | `/:quizId` | Delete quiz (only if no attempts exist) |
+| `GET` | `/educator/analytics/:quizId` | View attempt analytics |
+
+#### Student / Mixed
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/course/:courseId` | List active quizzes for a course |
+| `GET` | `/:quizId` | Fetch quiz (answers hidden for students) |
+| `POST` | `/:quizId/submit` | Submit quiz answers (students only) |
+| `GET` | `/:quizId/results` | Get detailed results for an attempt |
+| `GET` | `/my-attempts/:courseId` | List student's own attempts |
+
+### Admin Routes `/api/admin`
+
+> Requires Admin role.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/dashboard` | Platform-wide stats and recent purchases |
+| `GET` | `/users` | List all users (filter, search, paginate) |
+| `GET` | `/educators` | List all educators |
+| `PUT` | `/users/:userId/role` | Update a user's role |
+| `DELETE` | `/users/:userId` | Delete a user (no purchases/courses) |
+| `POST` | `/purchases/:purchaseId/fulfill` | Manually fulfill a stuck purchase |
 
 ---
 
-## 🔑 Role-Based Access Control
+## Authentication & Roles
 
-### Roles
-
-| Role | Description | Permissions |
-|------|-------------|-------------|
-| **Student** | Default role on signup | Browse courses, purchase, track progress, rate |
-| **Educator** | Promoted by Admin | All student permissions + create/manage own courses |
-| **Admin** | Bootstrap via env or promoted | Full platform access, user management, analytics |
-
-### How It Works
+Authentication is handled by **Clerk**. Every protected request must include a valid Clerk session token in the `Authorization` header.
 
 ```
-Request → authenticate() → authorize(ROLES.ADMIN) → Controller
-               │                    │
-               │                    ├── Check bootstrap admin list
-               │                    ├── Lookup user.role in DB
-               │                    └── Compare against allowed roles
-               │
-               └── Extract userId from Clerk JWT
+Authorization: Bearer <clerk_session_token>
 ```
 
-### Bootstrap Admin Setup
+### Role Hierarchy
 
-Set initial admin users via environment variable:
+| Role | Capabilities |
+|---|---|
+| `student` | Browse courses, enroll, take quizzes, track progress |
+| `educator` | All student capabilities + create/manage own courses and quizzes |
+| `admin` | Full platform access, user management, manual purchase fulfillment |
+
+### Bootstrap Admins
+
+Add Clerk user IDs to `ADMIN_CLERK_USER_IDS` in your `.env` to grant admin access without a database record. This is useful for initial setup.
 
 ```env
-ADMIN_CLERK_USER_IDS=user_2abc123,user_2xyz456
-```
-
-These Clerk user IDs will always pass admin authorization checks, even before their DB role is updated.
-
-### Promoting Users
-
-```bash
-# Promote a user to educator
-curl -X PUT http://localhost:5000/api/admin/users/user_2abc123/role \
-  -H "Authorization: Bearer <admin-token>" \
-  -H "Content-Type: application/json" \
-  -d '{"role": "educator"}'
+ADMIN_CLERK_USER_IDS=user_abc123,user_def456
 ```
 
 ---
 
-## 🔍 Search & Filtering
+## Webhooks
 
-### Course Search
+Webhooks require the **raw request body** for signature verification. They are mounted at `/webhooks` — **before** body parsers run.
 
-```bash
-# Text search
-GET /api/course/all?search=javascript
-
-# Price range filter
-GET /api/course/all?minPrice=10&maxPrice=50
-
-# Filter by educator
-GET /api/course/all?educator=user_2abc123
-
-# Sort by price descending
-GET /api/course/all?sortBy=coursePrice&sortOrder=desc
-
-# Combine multiple filters
-GET /api/course/all?search=react&minPrice=0&maxPrice=100&sortBy=createdAt&sortOrder=desc&page=1&limit=12
-```
-
-### Admin User Search
-
-```bash
-# Search users by name or email
-GET /api/admin/users?search=john
-
-# Filter by role
-GET /api/admin/users?role=educator
-
-# Combined
-GET /api/admin/users?search=john&role=student&page=1&limit=20
-```
-
----
-
-## 📄 Pagination
-
-All list endpoints return a standardized pagination envelope:
-
-### Request
-
-```bash
-GET /api/course/all?page=2&limit=10
-```
-
-### Response
-
-```json
-{
-  "success": true,
-  "items": [
-    { "courseTitle": "...", "coursePrice": 29.99 }
-  ],
-  "pagination": {
-    "page": 2,
-    "limit": 10,
-    "total": 45,
-    "totalPages": 5,
-    "hasNextPage": true,
-    "hasPrevPage": true
-  }
-}
-```
-
-### Defaults & Limits
-
-| Parameter | Default | Min | Max |
-|-----------|---------|-----|-----|
-| `page` | 1 | 1 | — |
-| `limit` | 10 | 1 | 100 |
-
----
-
-## ❌ Error Handling
-
-### Standardized Error Response
-
-```json
-{
-  "success": false,
-  "message": "Validation failed",
-  "errors": [
-    { "field": "courseId", "message": "Invalid courseId format" },
-    { "field": "rating", "message": "Rating must be between 1 and 5" }
-  ]
-}
-```
-
-### Error Types Handled
-
-| Error Type | HTTP Status | Example |
-|------------|-------------|---------|
-| Validation | `400` | Missing/invalid fields |
-| Authentication | `401` | No/invalid token |
-| Authorization | `403` | Insufficient role |
-| Not Found | `404` | Resource doesn't exist |
-| Conflict | `409` | Duplicate enrollment |
-| Rate Limit | `429` | Too many requests |
-| Server Error | `500` | Unexpected failures |
-
-### Development vs Production
-
-- **Development**: Includes `stack` trace in error response
-- **Production**: Generic message, no stack trace, no internal details leaked
-
----
-
-## 🚦 Rate Limiting
-
-| Limiter | Window | Max Requests | Applied To |
-|---------|--------|-------------|------------|
-| Global | 15 min | 100 | All `/api` routes |
-| Auth | 15 min | 20 | Authentication endpoints |
-| Purchase | 1 hour | 10 | `/api/user/purchase` |
-| Admin Write | 15 min | 50 | Admin create/update/delete |
-
-Rate limit headers included in responses:
-
-```
-RateLimit-Limit: 100
-RateLimit-Remaining: 95
-RateLimit-Reset: 1640000000
-```
-
----
-
-## 📝 Logging
-
-### Log Levels
-
-| Level | Usage |
-|-------|-------|
-| `error` | Application errors, unhandled rejections |
-| `warn` | Operational issues, failed payments |
-| `info` | Server events, user actions, purchases |
-| `http` | HTTP request/response logs (Morgan) |
-| `debug` | Detailed debugging info (dev only) |
-
-### Development Output
-
-```
-14:32:05 info: Server running on http://localhost:5000 {"env":"development","port":5000}
-14:32:10 http: GET /api/course/all 200 45ms
-14:32:15 info: Purchase completed {"purchaseId":"...","userId":"..."}
-14:32:20 warn: Payment failed {"purchaseId":"..."}
-```
-
-### Production Output
-
-Structured JSON written to:
-- `logs/error.log` — Errors only (5 MB rotation, 5 files)
-- `logs/combined.log` — All levels (5 MB rotation, 5 files)
-
-```json
-{
-  "level": "info",
-  "message": "User role updated",
-  "service": "lms-api",
-  "targetUserId": "user_2abc",
-  "newRole": "educator",
-  "byAdmin": "user_2xyz",
-  "timestamp": "2024-01-15T14:32:05.000Z"
-}
-```
-
----
-
-## 🛡 Security
-
-### Measures Implemented
-
-| Security Layer | Implementation |
-|---------------|----------------|
-| **HTTP Headers** | `helmet` — sets security headers (CSP, HSTS, X-Frame-Options, etc.) |
-| **CORS** | Configurable origin whitelist via `CORS_ORIGIN` env var |
-| **NoSQL Injection** | `express-mongo-sanitize` — strips `$` and `.` from user input |
-| **Parameter Pollution** | `hpp` — protects against duplicate query params |
-| **Body Size Limit** | JSON body capped at 10 KB |
-| **File Upload** | MIME type whitelist, 5 MB max size |
-| **Rate Limiting** | Per-route rate limiting with configurable windows |
-| **Input Validation** | `express-validator` on all endpoints |
-| **Auth** | Clerk JWT verification on protected routes |
-| **RBAC** | Role checks against local DB + bootstrap admin list |
-| **Webhook Security** | Svix signature verification (Clerk), Stripe signature verification |
-| **Error Masking** | No stack traces or internal details in production |
-| **Swagger** | Disabled in production by default |
-
-### CORS Configuration
-
-```env
-# Single origin
-CORS_ORIGIN=http://localhost:5173
-
-# Multiple origins
-CORS_ORIGIN=http://localhost:5173,https://myapp.com
-
-# Allow all (development only)
-CORS_ORIGIN=*
-```
-
----
-
-## 🔗 Webhooks
-
-### Clerk Webhook
-
-**Endpoint**: `POST /webhooks/clerk`
+### Clerk Webhook — `POST /webhooks/clerk`
 
 Handles user lifecycle events:
 
 | Event | Action |
-|-------|--------|
-| `user.created` | Creates local User document with default student role |
-| `user.updated` | Syncs name, email, image, role |
-| `user.deleted` | Removes local User document |
+|---|---|
+| `user.created` | Upsert user in MongoDB |
+| `user.updated` | Sync name, email, image, role |
+| `user.deleted` | Ignored — use Admin API instead |
 
-### Stripe Webhook
-
-**Endpoint**: `POST /webhooks/stripe`
+### Stripe Webhook — `POST /webhooks/stripe`
 
 Handles payment events:
 
 | Event | Action |
-|-------|--------|
-| `checkout.session.completed` | Enrolls student, updates purchase status |
-| `payment_intent.payment_failed` | Marks purchase as failed |
+|---|---|
+| `checkout.session.completed` | Fulfill enrollment (idempotent) |
+| `payment_intent.payment_failed` | Mark purchase as failed |
+| `checkout.session.expired` | Mark purchase as failed |
 
-> ⚠️ Webhook routes are mounted **before** body parsers. Stripe requires raw body for signature verification.
+### Enrollment Fulfillment
+
+The `fulfillEnrollment` function is **idempotent** — calling it multiple times for the same purchase is safe. It:
+
+1. Checks if the purchase is already completed and returns early if so
+2. Auto-detects MongoDB replica set support and uses transactions if available
+3. Atomically updates `Purchase`, `Course.enrolledStudents`, and `User.enrolledCourses`
 
 ---
 
-## 📄 License
+## AI Quiz Generation
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+Quizzes are generated using **Google Gemini** from YouTube video transcripts.
+
+### Fallback Chain (per lecture)
+
+```
+1. YouTube transcript (via youtubei.js)
+       ↓ (if unavailable)
+2. Lecturer-provided description (stored on lecture, min 50 chars)
+       ↓ (if unavailable)
+3. Lecture marked as "unavailable" — skipped
+```
+
+### Pre-flight Check
+
+Before generating, use `POST /api/quiz/check-content` to verify content is available. The response includes per-lecture status and actionable instructions if generation is not possible.
+
+### Transcript Caching
+
+Fetched transcripts are cached in-memory (TTL: 1 hour, max: 500 entries) to avoid redundant YouTube API calls.
 
 ---
 
-<p align="center">
-  Built with ❤️ for modern education
-</p>
+## Error Handling
+
+All errors follow a consistent JSON structure:
+
+```json
+{
+  "success": false,
+  "message": "Human-readable error message",
+  "errors": [
+    { "field": "courseId", "message": "Invalid courseId format" }
+  ]
+}
+```
+
+The `errors` array is only present when there are validation details.
+
+In `development` mode, a `stack` field is also included.
+
+### HTTP Status Codes
+
+| Code | Meaning |
+|---|---|
+| `200` | Success |
+| `201` | Resource created |
+| `400` | Bad request / validation error |
+| `401` | Not authenticated |
+| `403` | Forbidden (wrong role or ownership) |
+| `404` | Resource not found |
+| `409` | Conflict (duplicate resource) |
+| `429` | Rate limit exceeded |
+| `500` | Internal server error |
+
+---
+
+## Rate Limiting
+
+| Limiter | Window | Max Requests | Applied To |
+|---|---|---|---|
+| Global | 15 min | 100 (configurable) | All `/api` routes |
+| Auth | 15 min | 20 | Authentication endpoints |
+| Purchase | 60 min | 10 | `/api/user/purchase` |
+| Admin writes | 15 min | 30 | Admin mutation endpoints |
+
+---
