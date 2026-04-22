@@ -175,12 +175,6 @@ Global state managed via Context:
 npm run build
 ```
 
-Publish folder:
-
-```
-dist
-```
-
 ---
 
 ## 📊 Project Summary
