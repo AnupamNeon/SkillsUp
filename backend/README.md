@@ -95,12 +95,15 @@ A robust, production-ready Learning Management System (LMS) REST API built with 
 │   ├── user.routes.js
 │   └── webhook.routes.js
 ├── utils/
-│   ├── ApiError.js           # Standardised error class
-│   ├── asyncHandler.js       # Async route wrapper
-│   ├── logger.js             # Winston logger
-│   ├── pagination.js         # Pagination helpers
-│   ├── roles.js              # Role constants
-│   └── youtubeService.js     # Transcript fetching + caching
+│   ├── ApiError.js               # Standardised error class
+│   ├── asyncHandler.js           # Async route wrapper
+│   ├── logger.js                 # Winston logger
+│   ├── pagination.js             # Pagination helpers
+│   ├── roles.js                  # Role constants
+│   └── transcriptSummarizer.js   # Transcript summarising + chunking
+├── services/
+│   ├── youtubeService.js     # Transcript fetching + caching
+│   ├── quizAiService.js      # AI prompt + grading
 └── validators/
     ├── admin.validator.js
     ├── course.validator.js

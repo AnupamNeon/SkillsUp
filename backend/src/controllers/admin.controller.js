@@ -1,7 +1,10 @@
+import mongoose from 'mongoose';
 import { clerkClient } from '@clerk/express';
 import User from '../models/User.js';
 import Course from '../models/Course.js';
 import Purchase from '../models/Purchase.js';
+import QuizAttempt from '../models/QuizAttempt.js';
+import CourseProgress from '../models/CourseProgress.js';
 import { ROLES } from '../utils/roles.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';

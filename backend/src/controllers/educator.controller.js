@@ -1,5 +1,7 @@
+import Quiz from '../models/Quiz.js';
 import { v2 as cloudinary } from 'cloudinary';
 import Course from '../models/Course.js';
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Purchase from '../models/Purchase.js';
 import ApiError from '../utils/ApiError.js';

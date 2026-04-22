@@ -52,15 +52,6 @@ app.get("/", (_req, res) => {
   res.json({ success: true, message: "LMS API is running" });
 });
 
-// ─── Health check ─────────────────────────────────
-app.get("/health", (_req, res) => {
-  res.json({
-    status: "ok",
-    environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString(),
-  });
-});
-
 // ─── API routes ───────────────────────────────────
 app.use("/api", apiRoutes);
 
