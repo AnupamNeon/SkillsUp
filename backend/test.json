@@ -1,0 +1,933 @@
+{
+  "info": {
+    "name": "LMS Backend API",
+    "description": "Complete API testing suite for Learning Management System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "clerkToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "courseId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "quizId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "chapterId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{clerkToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "0. Health & Setup",
+      "item": [
+        {
+          "name": "Root Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "API Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "1. User Management",
+      "item": [
+        {
+          "name": "Sync User (First Time Login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const res = pm.response.json();",
+                  "    if (res.user && res.user._id) {",
+                  "        pm.collectionVariables.set('userId', res.user._id);",
+                  "        console.log('User ID saved:', res.user._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/sync",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "sync"]
+            }
+          }
+        },
+        {
+          "name": "Get User Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/data",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "data"]
+            }
+          }
+        },
+        {
+          "name": "Get Enrolled Courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/enrolled-courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "enrolled-courses"]
+            }
+          }
+        },
+        {
+          "name": "Get Enrolled Course Content",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/enrolled-courses/{{courseId}}/content",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "enrolled-courses", "{{courseId}}", "content"]
+            }
+          }
+        },
+        {
+          "name": "Update Course Progress",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"lectureId\": \"lecture-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/update-course-progress",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "update-course-progress"]
+            }
+          }
+        },
+        {
+          "name": "Get Course Progress",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/course-progress/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "course-progress", "{{courseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Submit Rating",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"rating\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/ratings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "ratings"]
+            }
+          }
+        },
+        {
+          "name": "Purchase Course (Stripe Checkout)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseId\": \"{{courseId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/purchase",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "purchase"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Public Course Routes",
+      "item": [
+        {
+          "name": "Get All Courses (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const res = pm.response.json();",
+                  "    if (res.items && res.items.length > 0) {",
+                  "        pm.collectionVariables.set('courseId', res.items[0]._id);",
+                  "        console.log('First course ID saved:', res.items[0]._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/course/all?page=1&limit=10&sortBy=createdAt&sortOrder=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "course", "all"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "react",
+                  "disabled": true
+                },
+                {
+                  "key": "minPrice",
+                  "value": "0",
+                  "disabled": true
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "100",
+                  "disabled": true
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Course By ID (Public)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/course/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "course", "{{courseId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Educator - Course Management",
+      "item": [
+        {
+          "name": "Get Educator Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/educator/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "educator", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Get Educator Courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/educator/courses?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "educator", "courses"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Educator Course By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/educator/courses/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "educator", "courses", "{{courseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Course",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const res = pm.response.json();",
+                  "    if (res.courseId) {",
+                  "        pm.collectionVariables.set('courseId', res.courseId);",
+                  "        console.log('New course ID saved:', res.courseId);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "/path/to/thumbnail.jpg",
+                  "description": "Course thumbnail image"
+                },
+                {
+                  "key": "courseData",
+                  "value": "{\n  \"courseTitle\": \"Complete React Development 2024\",\n  \"courseDescription\": \"Master React with hooks, context, and real projects\",\n  \"coursePrice\": 49.99,\n  \"discount\": 20,\n  \"courseContent\": [\n    {\n      \"chapterId\": \"ch-001\",\n      \"chapterOrder\": 0,\n      \"chapterTitle\": \"Introduction to React\",\n      \"chapterContent\": [\n        {\n          \"lectureId\": \"lec-001\",\n          \"lectureTitle\": \"What is React?\",\n          \"lectureDuration\": 15,\n          \"lectureUrl\": \"https://www.youtube.com/watch?v=dGcsHMXbSOA\",\n          \"isPreviewFree\": true,\n          \"lectureOrder\": 0,\n          \"lectureDescription\": \"Introduction to React framework and its core concepts\"\n        }\n      ]\n    }\n  ]\n}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/educator/add-course",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "educator", "add-course"]
+            }
+          }
+        },
+        {
+          "name": "Update Course",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "/path/to/new-thumbnail.jpg",
+                  "disabled": true
+                },
+                {
+                  "key": "courseData",
+                  "value": "{\n  \"courseTitle\": \"Complete React Development 2024 - UPDATED\",\n  \"courseDescription\": \"Master React with hooks, context, Redux and real projects\",\n  \"coursePrice\": 59.99,\n  \"discount\": 15\n}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/educator/courses/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "educator", "courses", "{{courseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Course",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/educator/courses/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "educator", "courses", "{{courseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Publish Course",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isPublished\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/educator/courses/{{courseId}}/publish",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "educator", "courses", "{{courseId}}", "publish"]
+            }
+          }
+        },
+        {
+          "name": "Update Lecture Descriptions",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descriptions\": [\n    {\n      \"lectureId\": \"lec-001\",\n      \"description\": \"This lecture covers the fundamentals of React including components, props, and state management. We'll explore how React uses a virtual DOM for efficient rendering and learn about the component lifecycle. Perfect for beginners starting their React journey.\"\n    },\n    {\n      \"lectureId\": \"lec-002\",\n      \"description\": \"Deep dive into React Hooks - useState, useEffect, useContext, and custom hooks. Learn how to manage component state and side effects in functional components. Includes practical examples and best practices.\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/educator/courses/{{courseId}}/lecture-descriptions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "educator", "courses", "{{courseId}}", "lecture-descriptions"]
+            }
+          }
+        },
+        {
+          "name": "Get Enrolled Students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/educator/enrolled-students?page=1&limit=15",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "educator", "enrolled-students"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "15"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Quiz Management",
+      "item": [
+        {
+          "name": "Check Chapter Content Availability",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const res = pm.response.json();",
+                  "    console.log('Can generate quiz:', res.canGenerate);",
+                  "    console.log('Content sources:', res.contentSources);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"chapterId\": \"ch-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/quiz/check-content",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "quiz", "check-content"]
+            }
+          }
+        },
+        {
+          "name": "Generate AI Quiz",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const res = pm.response.json();",
+                  "    if (res.quiz && res.quiz._id) {",
+                  "        pm.collectionVariables.set('quizId', res.quiz._id);",
+                  "        console.log('Quiz ID saved:', res.quiz._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"chapterId\": \"ch-001\",\n  \"quizTitle\": \"React Fundamentals Quiz\",\n  \"numberOfQuestions\": 5,\n  \"difficulty\": \"medium\",\n  \"timeLimit\": 10,\n  \"passingScore\": 60\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/quiz/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "quiz", "generate"]
+            }
+          }
+        },
+        {
+          "name": "Create Manual Quiz",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const res = pm.response.json();",
+                  "    if (res.quiz && res.quiz._id) {",
+                  "        pm.collectionVariables.set('quizId', res.quiz._id);",
+                  "        console.log('Quiz ID saved:', res.quiz._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"chapterId\": \"ch-001\",\n  \"quizTitle\": \"React Basics - Manual Quiz\",\n  \"quizDescription\": \"Test your understanding of React fundamentals\",\n  \"questions\": [\n    {\n      \"questionText\": \"What is React?\",\n      \"questionType\": \"multiple-choice\",\n      \"options\": [\n        {\n          \"optionId\": \"A\",\n          \"optionText\": \"A database\",\n          \"isCorrect\": false\n        },\n        {\n          \"optionId\": \"B\",\n          \"optionText\": \"A JavaScript library for building user interfaces\",\n          \"isCorrect\": true\n        },\n        {\n          \"optionId\": \"C\",\n          \"optionText\": \"A CSS framework\",\n          \"isCorrect\": false\n        },\n        {\n          \"optionId\": \"D\",\n          \"optionText\": \"A server-side language\",\n          \"isCorrect\": false\n        }\n      ],\n      \"correctAnswer\": \"B\",\n      \"explanation\": \"React is a JavaScript library developed by Facebook for building user interfaces, particularly single-page applications.\",\n      \"difficulty\": \"easy\",\n      \"points\": 1\n    }\n  ],\n  \"passingScore\": 60,\n  \"timeLimit\": 10,\n  \"attemptsAllowed\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/quiz/manual",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "quiz", "manual"]
+            }
+          }
+        },
+        {
+          "name": "Get Course Quizzes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/quiz/course/{{courseId}}?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "quiz", "course", "{{courseId}}"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Quiz (Student/Educator/Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/quiz/{{quizId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "quiz", "{{quizId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Quiz",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quizTitle\": \"React Fundamentals Quiz - Updated\",\n  \"passingScore\": 70,\n  \"timeLimit\": 15,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/quiz/{{quizId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "quiz", "{{quizId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Quiz",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/quiz/{{quizId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "quiz", "{{quizId}}"]
+            }
+          }
+        },
+        {
+          "name": "Submit Quiz (Student)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answers\": [\n    {\n      \"questionId\": \"q1\",\n      \"selectedAnswer\": \"B\"\n    },\n    {\n      \"questionId\": \"q2\",\n      \"selectedAnswer\": \"A\"\n    }\n  ],\n  \"timeSpent\": 320,\n  \"startedAt\": \"2024-01-15T10:30:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/quiz/{{quizId}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "quiz", "{{quizId}}", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Get Quiz Results",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/quiz/{{quizId}}/results?attemptId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "quiz", "{{quizId}}", "results"],
+              "query": [
+                {
+                  "key": "attemptId",
+                  "value": "",
+                  "description": "Optional - specific attempt ID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Quiz Attempts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/quiz/my-attempts/{{courseId}}?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "quiz", "my-attempts", "{{courseId}}"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Quiz Analytics (Educator)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/quiz/educator/analytics/{{quizId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "quiz", "educator", "analytics", "{{quizId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Admin Routes",
+      "item": [
+        {
+          "name": "Get Admin Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "List All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users?page=1&limit=20&role=&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "role",
+                  "value": "",
+                  "description": "Filter by role: student, educator, admin"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by name or email"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update User Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"educator\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{userId}}/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{userId}}", "role"]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Manually Fulfill Purchase",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/purchases/:purchaseId/fulfill",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "purchases", ":purchaseId", "fulfill"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Webhooks (Testing)",
+      "item": [
+        {
+          "name": "Clerk Webhook (User Created)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "svix-id",
+                "value": "msg_test123"
+              },
+              {
+                "key": "svix-timestamp",
+                "value": "{{$timestamp}}"
+              },
+              {
+                "key": "svix-signature",
+                "value": "v1,test_signature"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"user.created\",\n  \"data\": {\n    \"id\": \"user_test123\",\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"email_addresses\": [\n      {\n        \"email_address\": \"john.doe@example.com\"\n      }\n    ],\n    \"image_url\": \"https://via.placeholder.com/150\",\n    \"public_metadata\": {\n      \"role\": \"student\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhooks/clerk",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhooks", "clerk"]
+            }
+          }
+        },
+        {
+          "name": "Stripe Webhook (Checkout Completed)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "stripe-signature",
+                "value": "test_signature"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"checkout.session.completed\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"cs_test_123\",\n      \"payment_status\": \"paid\",\n      \"metadata\": {\n        \"purchaseId\": \"{{purchaseId}}\",\n        \"courseId\": \"{{courseId}}\",\n        \"userId\": \"{{userId}}\"\n      }\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhooks/stripe",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhooks", "stripe"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
