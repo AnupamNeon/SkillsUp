@@ -21,7 +21,6 @@ export const getAllCourses = asyncHandler(async (req, res) => {
 
   const filter = { isPublished: true };
 
-  // Text / regex search
   if (search) {
     const regex = new RegExp(escapeRegex(search), 'i');
     filter.$or = [
@@ -30,17 +29,14 @@ export const getAllCourses = asyncHandler(async (req, res) => {
     ];
   }
 
-  // Price range
   if (minPrice || maxPrice) {
     filter.coursePrice = {};
     if (minPrice) filter.coursePrice.$gte = parseFloat(minPrice);
     if (maxPrice) filter.coursePrice.$lte = parseFloat(maxPrice);
   }
 
-  // Educator filter
   if (educator) filter.educator = educator;
 
-  // Sort
   const sort = {};
   if (sortBy) {
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
@@ -50,7 +46,7 @@ export const getAllCourses = asyncHandler(async (req, res) => {
 
   const [courses, total] = await Promise.all([
     Course.find(filter)
-      .select('-courseContent -enrolledStudents')
+      .select('-enrolledStudents') // ✅ REMOVED -courseContent
       .populate('educator', 'name imageUrl')
       .sort(sort)
       .skip(skip)
@@ -59,9 +55,25 @@ export const getAllCourses = asyncHandler(async (req, res) => {
     Course.countDocuments(filter),
   ]);
 
+  // ✅ Compute totalLectures per course and strip heavy content
+  const sanitizedCourses = courses.map((course) => {
+    const totalLectures = course.courseContent?.reduce(
+      (sum, ch) => sum + (ch.chapterContent?.length || 0),
+      0
+    ) || 0;
+
+    // Remove courseContent after computing — keep payload light
+    const { courseContent, ...rest } = course;
+
+    return {
+      ...rest,
+      totalLectures, // ✅ Send only the count
+    };
+  });
+
   res.json({
     success: true,
-    ...paginatedResponse(courses, total, { page, limit }),
+    ...paginatedResponse(sanitizedCourses, total, { page, limit }),
   });
 });
 

@@ -16,22 +16,27 @@ export function discountedPrice(price, discount) {
 function CourseCard({ course }) {
   const avg = useMemo(
     () => calcAvgRating(course.courseRatings),
-    [course.courseRatings]
+    [course.courseRatings],
   );
 
   const finalPrice = useMemo(
     () => discountedPrice(course.coursePrice, course.discount),
-    [course.coursePrice, course.discount]
+    [course.coursePrice, course.discount],
   );
 
   const totalLectures = useMemo(() => {
+    // If backend sent totalLectures (from list API), use it
+    if (typeof course.totalLectures === "number") {
+      return course.totalLectures;
+    }
+    // Fallback: calculate from courseContent (CourseDetail page)
     return (
       course.courseContent?.reduce(
         (s, ch) => s + (ch.chapterContent?.length || 0),
-        0
+        0,
       ) || 0
     );
-  }, [course.courseContent]);
+  }, [course.totalLectures, course.courseContent]);
 
   return (
     <Link
